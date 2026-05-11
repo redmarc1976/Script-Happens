@@ -67,7 +67,23 @@ function parseIntent(text: string): ParsedIntent | null {
   if (!lower.includes('book')) return null
 
   let range: { start: string; end: string } | null = null
-  if (lower.includes('next week')) {
+  const nWeeksMatch = lower.match(/next\s+(\d+)\s+weeks?/)
+  const nDaysMatch = lower.match(/next\s+(\d+)\s+days?/)
+
+  if (nWeeksMatch) {
+    const n = parseInt(nWeeksMatch[1], 10)
+    const start = isoDate(mondayOfWeek(1))
+    const end = new Date(mondayOfWeek(1))
+    end.setDate(end.getDate() + n * 7 - 3) // end on Friday of last week
+    range = { start, end: isoDate(end) }
+  } else if (nDaysMatch) {
+    const n = parseInt(nDaysMatch[1], 10)
+    const start = new Date()
+    start.setDate(start.getDate() + 1)
+    const end = new Date(start)
+    end.setDate(start.getDate() + n - 1)
+    range = { start: isoDate(start), end: isoDate(end) }
+  } else if (lower.includes('next week')) {
     range = getWeekRange(1)
   } else if (lower.includes('this week')) {
     range = getWeekRange(0)
