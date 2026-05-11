@@ -3,6 +3,7 @@ import clock from '../assets/Clock.png'
 
 interface LandingProps {
   onOpenFloorPlan: () => void
+  onOpenSearch: () => void
 }
 
 const iconStroke = {
@@ -73,16 +74,7 @@ function DeskIcon() {
   )
 }
 
-function BriefcaseIcon() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" {...iconStroke}>
-      <rect x="3" y="7" width="18" height="13" rx="2" />
-      <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-    </svg>
-  )
-}
-
-function Landing({ onOpenFloorPlan }: LandingProps) {
+function Landing({ onOpenFloorPlan, onOpenSearch }: LandingProps) {
   return (
     <div className="landing">
       <section className="landing-hero">
@@ -111,7 +103,7 @@ function Landing({ onOpenFloorPlan }: LandingProps) {
           <h3 className="landing-quicklink-title">Team Bookings</h3>
           <p className="landing-quicklink-text">Book for your team, or for your forgetful colleague.</p>
         </button>
-        <button className="landing-quicklink">
+        <button className="landing-quicklink" onClick={onOpenSearch}>
           <SearchIcon />
           <h3 className="landing-quicklink-title">Search</h3>
           <p className="landing-quicklink-text">Looking for a colleague? Look no further.</p>
@@ -143,13 +135,6 @@ function Landing({ onOpenFloorPlan }: LandingProps) {
               <div>
                 <p className="landing-stat-label">So far this year you've booked:</p>
                 <p className="landing-stat-value">100 Desks</p>
-              </div>
-            </div>
-            <div className="landing-stat">
-              <BriefcaseIcon />
-              <div>
-                <p className="landing-stat-label">Your average shift at your desk is:</p>
-                <p className="landing-stat-value">5 Hours 30 Minutes</p>
               </div>
             </div>
           </div>

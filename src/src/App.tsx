@@ -5,9 +5,10 @@ import Sidebar from './components/Sidebar'
 import MainPanel from './components/MainPanel'
 import ChatPanel from './components/ChatPanel'
 import Landing from './components/Landing'
+import Search from './components/Search'
 import { useState } from 'react'
 
-type View = 'landing' | 'floorplan'
+type View = 'landing' | 'floorplan' | 'search'
 
 function App() {
   const [chatOpen, setChatOpen] = useState(false)
@@ -17,14 +18,19 @@ function App() {
   const [currentView, setCurrentView] = useState<View>('landing')
 
   return (
-    <div className={`app-container ${chatOpen ? 'chat-open' : ''} ${currentView === 'landing' ? 'landing-view' : ''}`}>
+    <div className={`app-container ${chatOpen ? 'chat-open' : ''} ${currentView === 'landing' || currentView === 'search' ? 'landing-view' : ''}`}>
       <TopBar
         onToggle={() => setChatOpen(!chatOpen)}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         onHome={() => setCurrentView('landing')}
       />
       {currentView === 'landing' ? (
-        <Landing onOpenFloorPlan={() => setCurrentView('floorplan')} />
+        <Landing
+          onOpenFloorPlan={() => setCurrentView('floorplan')}
+          onOpenSearch={() => setCurrentView('search')}
+        />
+      ) : currentView === 'search' ? (
+        <Search />
       ) : (
         <>
           <Sidebar isOpen={sidebarOpen} selectedFloor={selectedFloor} onFloorChange={setSelectedFloor} selectedDate={selectedDate} onDateChange={setSelectedDate} />
