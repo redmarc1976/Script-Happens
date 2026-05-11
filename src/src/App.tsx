@@ -30,6 +30,7 @@ function App() {
         <Landing
           onOpenFloorPlan={() => setCurrentView('floorplan')}
           onOpenSearch={() => setCurrentView('search')}
+          onOpenProfile={() => setCurrentView('profile')}
         />
       ) : currentView === 'search' ? (
         <Search />

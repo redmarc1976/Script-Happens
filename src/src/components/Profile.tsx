@@ -39,6 +39,55 @@ function DeskIcon() {
 
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as const
 
+const MY_STATS = {
+  checkInRate: 80,
+  avgCheckIn: '9:00am',
+  desksBooked: 100,
+}
+
+type Colleague = {
+  id: string
+  name: string
+  checkInRate: number
+  avgCheckIn: string
+  desksBooked: number
+}
+
+const COLLEAGUES: Colleague[] = [
+  { id: 'sarah-chen',     name: 'Sarah Chen',     checkInRate: 92, avgCheckIn: '8:30am', desksBooked: 142 },
+  { id: 'james-patel',    name: 'James Patel',    checkInRate: 76, avgCheckIn: '9:15am', desksBooked: 88  },
+  { id: 'emily-roberts',  name: 'Emily Roberts',  checkInRate: 85, avgCheckIn: '9:00am', desksBooked: 120 },
+  { id: 'mark-thompson',  name: 'Mark Thompson',  checkInRate: 95, avgCheckIn: '8:45am', desksBooked: 156 },
+  { id: 'olivia-brown',   name: 'Olivia Brown',   checkInRate: 70, avgCheckIn: '9:30am', desksBooked: 75  },
+  { id: 'liam-walsh',     name: 'Liam Walsh',     checkInRate: 88, avgCheckIn: '8:55am', desksBooked: 110 },
+  { id: 'aisha-khan',     name: 'Aisha Khan',     checkInRate: 90, avgCheckIn: '8:40am', desksBooked: 132 },
+]
+
+function parseTime(s: string): number {
+  const m = s.toLowerCase().match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/)
+  if (!m) return 0
+  let h = parseInt(m[1], 10)
+  const mm = parseInt(m[2], 10)
+  const period = m[3]
+  if (period === 'pm' && h !== 12) h += 12
+  if (period === 'am' && h === 12) h = 0
+  return h * 60 + mm
+}
+
+function timeDiffLabel(theirs: string, mine: string): string {
+  const diff = parseTime(theirs) - parseTime(mine)
+  if (diff === 0) return 'same as you'
+  const abs = Math.abs(diff)
+  return diff < 0 ? `${abs} min earlier than you` : `${abs} min later than you`
+}
+
+function numDiffLabel(theirs: number, mine: number, suffix = ''): string {
+  const diff = theirs - mine
+  if (diff === 0) return 'same as you'
+  const sign = diff > 0 ? '+' : '−'
+  return `${sign}${Math.abs(diff)}${suffix} vs you`
+}
+
 const INITIAL_PROFILE = {
   fullName: 'Daniel Judge',
   role: 'Senior Engineer',
@@ -66,6 +115,24 @@ function Profile() {
   const [profile, setProfile] = useState<ProfileData>(INITIAL_PROFILE)
   const [draft, setDraft] = useState<ProfileData>(INITIAL_PROFILE)
   const [isEditing, setIsEditing] = useState(false)
+  const [compareQuery, setCompareQuery] = useState('')
+  const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null)
+
+  const compareResults = compareQuery.trim()
+    ? COLLEAGUES
+        .filter(c => c.name.toLowerCase().includes(compareQuery.trim().toLowerCase()))
+        .slice(0, 5)
+    : []
+
+  function pickColleague(c: Colleague) {
+    setSelectedColleague(c)
+    setCompareQuery('')
+  }
+
+  function clearComparison() {
+    setSelectedColleague(null)
+    setCompareQuery('')
+  }
 
   function startEdit() {
     setDraft(profile)
@@ -189,6 +256,66 @@ function Profile() {
               <p className="profile-stat-value">100 Desks</p>
             </div>
           </div>
+          <h3 className="profile-compare-title">Competitive?</h3>
+          <p className="profile-compare-text">Search for a colleague to see how you compare.</p>
+
+          <input
+            className="profile-input"
+            placeholder="Type a colleague's name..."
+            value={compareQuery}
+            onChange={(e) => setCompareQuery(e.target.value)}
+          />
+
+          {compareResults.length > 0 && (
+            <ul className="profile-compare-results">
+              {compareResults.map(c => (
+                <li key={c.id}>
+                  <button className="profile-compare-result" onClick={() => pickColleague(c)}>
+                    {c.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {selectedColleague && (
+            <div className="profile-compare-card">
+              <div className="profile-compare-card-header">
+                <span className="profile-compare-card-name">{selectedColleague.name}</span>
+                <button className="profile-compare-clear" onClick={clearComparison} aria-label="Clear">×</button>
+              </div>
+              <div className="profile-stat">
+                <PieIcon />
+                <div>
+                  <p className="profile-stat-label">Check in rate:</p>
+                  <p className="profile-stat-value">
+                    {selectedColleague.checkInRate}%
+                    <span className="profile-diff"> ({numDiffLabel(selectedColleague.checkInRate, MY_STATS.checkInRate, '%')})</span>
+                  </p>
+                </div>
+              </div>
+              <div className="profile-stat">
+                <ClockIcon />
+                <div>
+                  <p className="profile-stat-label">Average check in:</p>
+                  <p className="profile-stat-value">
+                    {selectedColleague.avgCheckIn}
+                    <span className="profile-diff"> ({timeDiffLabel(selectedColleague.avgCheckIn, MY_STATS.avgCheckIn)})</span>
+                  </p>
+                </div>
+              </div>
+              <div className="profile-stat">
+                <DeskIcon />
+                <div>
+                  <p className="profile-stat-label">Desks booked this year:</p>
+                  <p className="profile-stat-value">
+                    {selectedColleague.desksBooked}
+                    <span className="profile-diff"> ({numDiffLabel(selectedColleague.desksBooked, MY_STATS.desksBooked)})</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
       </div>
