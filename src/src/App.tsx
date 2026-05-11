@@ -14,7 +14,7 @@ import { getDeskById } from './data/desks'
 
 const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001'
 
-type View = 'landing' | 'floorplan' | 'search' | 'profile'
+type View = 'landing' | 'floorplan' | 'search' | 'simplesearch' | 'profile'
 
 function App() {
   const [chatOpen, setChatOpen] = useState(false)
@@ -131,6 +131,7 @@ function App() {
         <Landing
           onOpenFloorPlan={openSelfBooking}
           onOpenSearch={() => setCurrentView('search')}
+          onOpenSimpleSearch={() => setCurrentView('simplesearch')}
           onOpenProfile={() => setCurrentView('profile')}
         />
       ) : currentView === 'search' ? (
@@ -139,6 +140,8 @@ function App() {
           groupBookingIds={groupBookingIds}
           onToggleGroupBooking={toggleGroupBooking}
         />
+      ) : currentView === 'simplesearch' ? (
+        <Search simpleMode />
       ) : currentView === 'profile' ? (
         <Profile />
       ) : (
