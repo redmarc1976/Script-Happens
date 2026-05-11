@@ -8,9 +8,10 @@ interface TopBarProps {
   onToggle: () => void
   onMenuToggle: () => void
   onHome: () => void
+  onProfile: () => void
 }
 
-function TopBar({ onToggle, onMenuToggle, onHome }: TopBarProps) {
+function TopBar({ onToggle, onMenuToggle, onHome, onProfile }: TopBarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -50,7 +51,7 @@ function TopBar({ onToggle, onMenuToggle, onHome }: TopBarProps) {
           </button>
           {menuOpen && (
             <div className="topbar-profile-menu" role="menu">
-              <button className="topbar-profile-item" role="menuitem" onClick={() => setMenuOpen(false)}>Profile</button>
+              <button className="topbar-profile-item" role="menuitem" onClick={() => { onProfile(); setMenuOpen(false) }}>Profile</button>
               <button className="topbar-profile-item" role="menuitem" onClick={() => setMenuOpen(false)}>Settings</button>
               <button className="topbar-profile-item" role="menuitem" onClick={() => setMenuOpen(false)}>Logout</button>
             </div>

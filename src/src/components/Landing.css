@@ -147,8 +147,8 @@
 
 .landing-stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px 48px;
+  grid-template-columns: 1fr;
+  gap: 20px;
   margin-bottom: 28px;
   max-width: 760px;
 }

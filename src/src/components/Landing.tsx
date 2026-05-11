@@ -4,6 +4,7 @@ import clock from '../assets/Clock.png'
 interface LandingProps {
   onOpenFloorPlan: () => void
   onOpenSearch: () => void
+  onOpenProfile: () => void
 }
 
 const iconStroke = {
@@ -74,12 +75,12 @@ function DeskIcon() {
   )
 }
 
-function Landing({ onOpenFloorPlan, onOpenSearch }: LandingProps) {
+function Landing({ onOpenFloorPlan, onOpenSearch, onOpenProfile }: LandingProps) {
   return (
     <div className="landing">
       <section className="landing-hero">
         <div className="landing-hero-content">
-          <h1 className="landing-hero-title">Your workspace, ready when you are.</h1>
+          <h1 className="landing-hero-title">Hi Daniel.<br />Your workspace, ready when you are.</h1>
           <p className="landing-hero-subtitle">Find your space in seconds below.</p>
           <div className="landing-hero-actions">
             <button className="landing-btn landing-btn-primary" onClick={onOpenFloorPlan}>Book now</button>
@@ -138,9 +139,7 @@ function Landing({ onOpenFloorPlan, onOpenSearch }: LandingProps) {
               </div>
             </div>
           </div>
-          <h3 className="landing-compare-title">Competitive?</h3>
-          <p className="landing-compare-text">Click the button below to see how you compare against your colleagues.</p>
-          <button className="landing-btn landing-btn-primary">Compare</button>
+          <button className="landing-btn landing-btn-primary" onClick={onOpenProfile}>Profile</button>
         </div>
       </section>
     </div>
