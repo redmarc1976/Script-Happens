@@ -2,9 +2,10 @@ from datetime import date
 from typing import List, Optional
 
 import azure.functions as func
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
+from auth import ClientPrincipal, get_current_principal, get_current_user
 from graph_calendar import (
     GraphAPIError,
     GraphAuthError,
@@ -12,6 +13,7 @@ from graph_calendar import (
     UserNotFoundError,
     work_location_by_day,
 )
+from models import User
 
 
 app = func.FunctionApp()
@@ -35,6 +37,40 @@ class WorkLocationResponse(BaseModel):
 @fast_api.get("/api/health", response_model=HealthCheck)
 def health_check():
     return HealthCheck()
+
+
+class MeResponse(BaseModel):
+    id: str
+    full_name: str
+    email: str
+    upn: Optional[str]
+    team: str
+    role: str
+    location: str
+    preferred_neighbourhood: Optional[str]
+    identity_provider: str
+
+    class Config:
+        from_attributes = True
+
+
+@fast_api.get("/api/users/me", response_model=MeResponse)
+def get_me(
+    principal: ClientPrincipal = Depends(get_current_principal),
+    user: User = Depends(get_current_user),
+):
+    """Returns the logged-in user's DB record, matched by UPN from SWA auth."""
+    return MeResponse(
+        id=user.id,
+        full_name=user.full_name,
+        email=user.email,
+        upn=user.upn,
+        team=user.team,
+        role=user.role,
+        location=user.location,
+        preferred_neighbourhood=user.preferred_neighbourhood,
+        identity_provider=principal.identity_provider,
+    )
 
 
 @fast_api.get("/api/work-location", response_model=WorkLocationResponse)
