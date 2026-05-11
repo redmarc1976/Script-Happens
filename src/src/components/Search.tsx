@@ -294,7 +294,7 @@ function Search({ onOpenFloorPlan, groupBookingIds = new Set(), onToggleGroupBoo
                     className="search-modal-btn search-modal-btn-primary"
                     onClick={() => {
                       setDialog({ kind: 'closed' })
-                      onOpenFloorPlan()
+                      onOpenFloorPlan?.()
                     }}
                   >
                     Take me to the floor plan
