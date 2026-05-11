@@ -17,11 +17,14 @@ from booking import (
     user_holiday_days,
 )
 from database import get_db
+from fastapi.responses import Response as FastAPIResponse
+
 from graph_calendar import (
     GraphAPIError,
     GraphAuthError,
     MailboxNotProvisionedError,
     UserNotFoundError,
+    get_user_photo,
     work_location_by_day,
 )
 from models import Booking, Desk, User
@@ -220,6 +223,14 @@ async def auto_book(
     return AutoBookResponse(
         target_user=target.upn or target.email, booked=booked, skipped=skipped
     )
+
+
+@fast_api.get("/api/me/photo")
+async def get_my_photo(caller: User = Depends(get_current_user)):
+    photo = await get_user_photo(caller.upn or caller.email)
+    if photo is None:
+        raise HTTPException(status_code=404, detail="No profile photo available")
+    return FastAPIResponse(content=photo, media_type="image/jpeg")
 
 
 class GroupBookRequest(BaseModel):

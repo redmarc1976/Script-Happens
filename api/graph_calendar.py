@@ -240,6 +240,20 @@ def collapse_by_day(
     return days
 
 
+async def get_user_photo(user_id: str) -> bytes | None:
+    """Fetch the user's Entra profile photo. Returns None if unavailable."""
+    try:
+        token = _get_token()
+    except GraphAuthError:
+        return None
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(
+            f"{GRAPH_BASE}/users/{user_id}/photo/$value",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+    return resp.content if resp.status_code == 200 else None
+
+
 async def work_location_by_day(
     user_id: str, start_date: date, end_date: date
 ) -> list[dict[str, Any]]:
