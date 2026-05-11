@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import './TopBar.css'
 import logo from '../assets/Logo.png'
+import home from '../assets/Home.png'
 import profile from '../assets/Profile.png'
 
 interface TopBarProps {
   onToggle: () => void
   onMenuToggle: () => void
+  onHome: () => void
 }
 
-function TopBar({ onToggle, onMenuToggle }: TopBarProps) {
+function TopBar({ onToggle, onMenuToggle, onHome }: TopBarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -27,8 +29,13 @@ function TopBar({ onToggle, onMenuToggle }: TopBarProps) {
     <div className="topbar">
       <div className="topbar-brand">
         <button className="topbar-hamburger" onClick={onMenuToggle}>☰</button>
-        <img src={logo} alt="Bucking@LBG logo" className="topbar-logo" />
-        <span className="topbar-title">Bucking@LBG</span>
+        <button className="topbar-brand-btn" onClick={onHome} aria-label="Home">
+          <img src={logo} alt="Bucking@LBG logo" className="topbar-logo" />
+          <span className="topbar-title">Bucking@LBG</span>
+        </button>
+        <button className="topbar-home-btn" onClick={onHome} aria-label="Home">
+          <img src={home} alt="Home" className="topbar-home-icon" />
+        </button>
       </div>
       <div className="topbar-actions">
         <button className="topbar-chat-btn" onClick={onToggle}>💬 Assistant</button>

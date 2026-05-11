@@ -12,6 +12,34 @@
   gap: 10px;
 }
 
+.topbar-brand-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+}
+
+.topbar-home-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.topbar-home-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
 .topbar-logo {
   height: 56px;
   width: auto;

@@ -85,17 +85,20 @@
 }
 
 .sidebar-site-trigger {
-  display: flex !important;
-  justify-content: space-between;
-  align-items: center;
+  position: relative;
+  padding-right: 32px;
 }
 
 .sidebar-site-chevron {
-  font-size: 14px;
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  font-size: 12px;
   line-height: 1;
+  transform: translateY(-50%);
   transition: transform 0.15s;
 }
 
 .sidebar-site-chevron.open {
-  transform: rotate(180deg);
+  transform: translateY(-50%) rotate(180deg);
 }
