@@ -38,6 +38,38 @@
   transform: translate(-50%, -50%) scale(1.4);
 }
 
+.desk-dot-assigned {
+  background: #16a34a;
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+.desk-dot-assigned:hover {
+  background: #15803d;
+}
+
+.desk-dot-active {
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.35);
+}
+
+.floor-plan-banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-secondary);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 5;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .desk-tooltip {
   position: absolute;
   transform: translate(14px, -50%);
