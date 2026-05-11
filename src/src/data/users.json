@@ -1514,5 +1514,35 @@
     ],
     "bookingWindowDays": 13,
     "accessibilityNeeds": null
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "employeeId": 10001,
+    "fullName": "Daniel",
+    "email": "daniel@thebank.com",
+    "location": "Leeds",
+    "team": "Security",
+    "role": "Manager",
+    "lineManager": {
+      "name": "Alice Smith",
+      "email": "alice.smith@thebank.com"
+    },
+    "anchorDays": [
+      "Wednesday"
+    ],
+    "defaultWorkingPattern": {
+      "monday": "office",
+      "tuesday": "remote",
+      "wednesday": "office",
+      "thursday": "office",
+      "friday": "remote"
+    },
+    "preferredNeighbourhood": "Security",
+    "deskPreferences": [
+      "window-seat",
+      "dual-monitor"
+    ],
+    "bookingWindowDays": 30,
+    "accessibilityNeeds": null
   }
 ]
