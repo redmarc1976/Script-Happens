@@ -51,6 +51,17 @@ interface ParsedIntent {
   end: string
 }
 
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+
+function nextOccurrence(dayIndex: number): string {
+  const today = new Date()
+  const todayIndex = today.getDay()
+  const delta = dayIndex === todayIndex ? 7 : (dayIndex - todayIndex + 7) % 7
+  const target = new Date(today)
+  target.setDate(today.getDate() + delta)
+  return isoDate(target)
+}
+
 function parseIntent(text: string): ParsedIntent | null {
   const lower = text.toLowerCase()
   if (!lower.includes('book')) return null
@@ -60,9 +71,23 @@ function parseIntent(text: string): ParsedIntent | null {
     range = getWeekRange(1)
   } else if (lower.includes('this week')) {
     range = getWeekRange(0)
+  } else if (lower.includes('tomorrow')) {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    const ds = isoDate(d)
+    range = { start: ds, end: ds }
+  } else if (lower.includes('today')) {
+    const ds = isoDate(new Date())
+    range = { start: ds, end: ds }
   } else {
-    const m = text.match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/)
-    if (m) range = { start: m[1], end: m[2] }
+    const matchedDay = DAY_NAMES.find(name => lower.includes(name))
+    if (matchedDay) {
+      const ds = nextOccurrence(DAY_NAMES.indexOf(matchedDay))
+      range = { start: ds, end: ds }
+    } else {
+      const m = text.match(/(\d{4}-\d{2}-\d{2}).*?(\d{4}-\d{2}-\d{2})/)
+      if (m) range = { start: m[1], end: m[2] }
+    }
   }
   if (!range) return null
 
@@ -91,7 +116,7 @@ function formatResponse(data: GroupBookResponse): string {
 }
 
 const HINT =
-  'Try: "book my team next week" or "book the Platform Engineering team this week".'
+  'Try: "book my team tomorrow", "book my team next week", or "book the Platform Engineering team on Monday".'
 
 function ChatPanel() {
   const { me } = useMe()
