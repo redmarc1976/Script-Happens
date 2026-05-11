@@ -40,6 +40,26 @@ PREFERENCES = [
 
 OFFICE_LOCATION = "London"
 
+# Real UPNs from the launchpad tenant. Assigned to the first N users in
+# users.json (in order) so any tenant member who logs in maps to a seeded
+# record. Remaining users keep their auto-generated UPNs.
+REAL_UPNS = [
+    "agtest@mwlanchpad.onmicrosoft.com",
+    "Alice@mwlanchpad.onmicrosoft.com",
+    "Dafydd@mwlanchpad.onmicrosoft.com",
+    "Frank.L.Wright@mwlanchpad.onmicrosoft.com",
+    "John.Smith@mwlanchpad.onmicrosoft.com",
+    "locallord@mwlanchpad.onmicrosoft.com",
+    "Sophie.taylor@mwlanchpad.onmicrosoft.com",
+    "team1.admin@MWLanchpad.onmicrosoft.com",
+    "team2.admin@MWLanchpad.onmicrosoft.com",
+    "team3.admin@MWLanchpad.onmicrosoft.com",
+    "team4.admin@MWLanchpad.onmicrosoft.com",
+    "team5.admin@MWLanchpad.onmicrosoft.com",
+    "team6.admin@MWLanchpad.onmicrosoft.com",
+    "team7.admin@MWLanchpad.onmicrosoft.com",
+]
+
 
 def desk_cluster_c4(prefix, floor, neighbourhood, cx, cy):
     """2x2 cluster of 4 desks."""
@@ -171,9 +191,13 @@ def seed_users(session, pref_objects):
         users_data = json.load(f)
 
     user_objects = {}
-    for u in users_data:
-        # Generate a UPN from the email (replace @thebank.com with @hackathon.onmicrosoft.com style)
-        upn = u["email"].replace("@thebank.com", "@launchpad.onmicrosoft.com")
+    for idx, u in enumerate(users_data):
+        # First N users get a real tenant UPN so they map to live AAD identities.
+        # Remaining users get an auto-generated UPN derived from their email.
+        if idx < len(REAL_UPNS):
+            upn = REAL_UPNS[idx]
+        else:
+            upn = u["email"].replace("@thebank.com", "@launchpad.onmicrosoft.com")
         user = User(
             id=u["id"],
             employee_id=u["employeeId"],
