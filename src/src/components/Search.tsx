@@ -3,9 +3,10 @@ import './Search.css'
 import { USERS, type User } from '../data/users'
 
 interface SearchProps {
-  onOpenFloorPlan: () => void
-  groupBookingIds: Set<string>
-  onToggleGroupBooking: (userId: string) => void
+  onOpenFloorPlan?: () => void
+  groupBookingIds?: Set<string>
+  onToggleGroupBooking?: (userId: string) => void
+  simpleMode?: boolean
 }
 
 type BookingDialog =
@@ -78,7 +79,7 @@ function statusLabel(s: ForecastStatus): string {
   return 'Weekend'
 }
 
-function Search({ onOpenFloorPlan, groupBookingIds, onToggleGroupBooking }: SearchProps) {
+function Search({ onOpenFloorPlan, groupBookingIds = new Set(), onToggleGroupBooking = () => {}, simpleMode = false }: SearchProps) {
   const [query, setQuery] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [dialog, setDialog] = useState<BookingDialog>({ kind: 'closed' })
@@ -183,28 +184,30 @@ function Search({ onOpenFloorPlan, groupBookingIds, onToggleGroupBooking }: Sear
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                className={`search-card-add${added ? ' search-card-add-on' : ''}`}
-                onClick={() => onToggleGroupBooking(user.id)}
-                aria-pressed={added}
-                aria-label={added ? `Remove ${user.fullName} from group booking list` : `Add ${user.fullName} to group booking list`}
-                title={added ? 'Added — click to remove' : 'Add to Group Booking List'}
-              >
-                {added ? (
-                  <svg className="search-card-tick" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                ) : (
-                  'Add to Group Booking List'
-                )}
-              </button>
+              {!simpleMode && (
+                <button
+                  type="button"
+                  className={`search-card-add${added ? ' search-card-add-on' : ''}`}
+                  onClick={() => onToggleGroupBooking(user.id)}
+                  aria-pressed={added}
+                  aria-label={added ? `Remove ${user.fullName} from group booking list` : `Add ${user.fullName} to group booking list`}
+                  title={added ? 'Added — click to remove' : 'Add to Group Booking List'}
+                >
+                  {added ? (
+                    <svg className="search-card-tick" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : (
+                    'Add to Group Booking List'
+                  )}
+                </button>
+              )}
             </article>
           )
         })}
       </section>
 
-        <aside className="search-aside">
+        {!simpleMode && <aside className="search-aside">
           <header className="search-aside-head">
             <h2 className="search-aside-title">Group Booking List</h2>
             <span className="search-aside-count">{selectedUsers.length}</span>
@@ -252,10 +255,10 @@ function Search({ onOpenFloorPlan, groupBookingIds, onToggleGroupBooking }: Sear
               </button>
             </>
           )}
-        </aside>
+        </aside>}
       </div>
 
-      {dialog.kind !== 'closed' && (
+      {!simpleMode && dialog.kind !== 'closed' && (
         <div
           className="search-modal-backdrop"
           onClick={() => setDialog({ kind: 'closed' })}

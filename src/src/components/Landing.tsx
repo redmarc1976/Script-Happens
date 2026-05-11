@@ -6,6 +6,7 @@ import { DESKS } from '../data/desks'
 interface LandingProps {
   onOpenFloorPlan: () => void
   onOpenSearch: () => void
+  onOpenSimpleSearch: () => void
   onOpenProfile: () => void
 }
 
@@ -118,7 +119,7 @@ function formatUpcoming(d: Date): { weekday: string; date: string } {
   }
 }
 
-function Landing({ onOpenFloorPlan, onOpenSearch, onOpenProfile }: LandingProps) {
+function Landing({ onOpenFloorPlan, onOpenSearch, onOpenSimpleSearch, onOpenProfile }: LandingProps) {
   const upcoming = nextWeekdays(3)
   const [firstName, setFirstName] = useState('Daniel')
   const [checkedIn, setCheckedIn] = useState(false)
@@ -257,7 +258,7 @@ function Landing({ onOpenFloorPlan, onOpenSearch, onOpenProfile }: LandingProps)
           <h3 className="landing-quicklink-title">Team Bookings</h3>
           <p className="landing-quicklink-text">Book for your team, or for your forgetful colleague.</p>
         </button>
-        <button className="landing-quicklink">
+        <button className="landing-quicklink" onClick={onOpenSimpleSearch}>
           <SearchIcon />
           <h3 className="landing-quicklink-title">Search</h3>
           <p className="landing-quicklink-text">Looking for a colleague? Look no further.</p>
