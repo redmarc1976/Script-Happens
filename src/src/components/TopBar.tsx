@@ -51,9 +51,14 @@ function TopBar({ onToggle, onMenuToggle, onHome, onProfile }: TopBarProps) {
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Profile menu"
               aria-expanded={menuOpen}
-              title={me?.full_name}
             >
-              <img src={profile} alt="Profile" className="topbar-profile-img" />
+              <img
+                src="/api/me/photo"
+                alt={me?.full_name ?? 'Profile'}
+                className="topbar-profile-img"
+                onError={e => { (e.target as HTMLImageElement).src = profile }}
+              />
+              {me && <span className="topbar-profile-name">{me.full_name}</span>}
             </button>
             {menuOpen && (
               <div className="topbar-profile-menu" role="menu">

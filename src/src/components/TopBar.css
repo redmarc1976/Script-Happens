@@ -83,6 +83,14 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.topbar-profile-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: inherit;
+  white-space: nowrap;
 }
 
 .topbar-profile-img {
