@@ -1,5 +1,7 @@
+import { useEffect, useMemo, useState } from 'react'
 import './Landing.css'
 import clock from '../assets/Clock.png'
+import { DESKS } from '../data/desks'
 
 interface LandingProps {
   onOpenFloorPlan: () => void
@@ -78,6 +80,25 @@ function DeskIcon() {
 const MOCK_UPCOMING_DESKS = ['G-W-B1-TL', 'G-W-B2-BR', 'F-NW-R1C2-TR']
 const MOCK_UPCOMING_AREAS = ['Windows', 'Windows', 'Open Plan']
 
+// Profile preferences — these will come from the API once the backend is wired up
+const PROFILE_OFFICE_DAYS = ['Monday', 'Tuesday', 'Thursday']
+const PROFILE_NEIGHBOURHOOD = 'Security'
+
+const DAY_MAP: Record<string, number> = {
+  Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6,
+}
+
+function nextOfficeDay(officeDays: string[]): Date {
+  const nums = officeDays.map(d => DAY_MAP[d])
+  const cursor = new Date()
+  cursor.setHours(0, 0, 0, 0)
+  for (let i = 1; i <= 7; i++) {
+    cursor.setDate(cursor.getDate() + 1)
+    if (nums.includes(cursor.getDay())) return new Date(cursor)
+  }
+  return new Date()
+}
+
 function nextWeekdays(count: number): Date[] {
   const days: Date[] = []
   const cursor = new Date()
@@ -99,38 +120,125 @@ function formatUpcoming(d: Date): { weekday: string; date: string } {
 
 function Landing({ onOpenFloorPlan, onOpenSearch, onOpenProfile }: LandingProps) {
   const upcoming = nextWeekdays(3)
+  const [firstName, setFirstName] = useState('Daniel')
+  const [checkedIn, setCheckedIn] = useState(false)
+
+  const suggestedDesk = useMemo(
+    () => DESKS.find(d => d.neighbourhood === PROFILE_NEIGHBOURHOOD) ?? DESKS[0],
+    []
+  )
+  const suggestedDay = useMemo(() => nextOfficeDay(PROFILE_OFFICE_DAYS), [])
+  const suggestedFmt = formatUpcoming(suggestedDay)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadUser() {
+      // 1. Backend profile (DB-backed, gives full_name)
+      try {
+        const r = await fetch('/api/users/me')
+        if (r.ok) {
+          const data = await r.json()
+          if (data?.full_name) {
+            const first = String(data.full_name).trim().split(/\s+/)[0]
+            if (!cancelled && first) {
+              setFirstName(first)
+              return
+            }
+          }
+        }
+      } catch { /* fall through */ }
+
+      // 2. SWA built-in auth principal — works in deployed SWA even without the function app
+      try {
+        const r = await fetch('/.auth/me')
+        if (r.ok) {
+          const data = await r.json()
+          const p = data?.clientPrincipal
+          // Prefer the AAD "name" claim (display name)
+          const nameClaim: string | undefined = p?.claims?.find(
+            (c: { typ?: string; val?: string }) =>
+              c.typ === 'name' || c.typ?.endsWith('/name')
+          )?.val
+          if (nameClaim) {
+            const first = nameClaim.split(/\s+/)[0]
+            if (!cancelled && first) {
+              setFirstName(first)
+              return
+            }
+          }
+          // Otherwise derive from userDetails (usually the UPN/email)
+          const details: string | undefined = p?.userDetails
+          if (details) {
+            const local = details.includes('@') ? details.split('@')[0] : details
+            const first = local.split(/[._\-]/)[0]
+            if (!cancelled && first) {
+              setFirstName(first.charAt(0).toUpperCase() + first.slice(1).toLowerCase())
+              return
+            }
+          }
+        }
+      } catch { /* keep fallback */ }
+    }
+
+    loadUser()
+    return () => { cancelled = true }
+  }, [])
+
   return (
     <div className="landing">
       <section className="landing-hero">
         <div className="landing-hero-content">
           <div className="landing-hero-text">
-            <h1 className="landing-hero-title">Hi Daniel.<br />Your workspace, ready when you are.</h1>
+            <h1 className="landing-hero-title">Hi {firstName}.<br />Your workspace, ready when you are.</h1>
             <p className="landing-hero-subtitle">Find your space in seconds below.</p>
             <div className="landing-hero-actions">
               <button className="landing-btn landing-btn-primary" onClick={onOpenFloorPlan}>Book now</button>
-              <button className="landing-btn landing-btn-secondary">Check in</button>
+              <button className="landing-btn landing-btn-secondary" onClick={() => setCheckedIn(true)}>Check in</button>
             </div>
           </div>
-          <aside className="landing-upcoming" aria-label="Upcoming desk bookings">
-            <h2 className="landing-upcoming-title">Upcoming bookings</h2>
-            <ul className="landing-upcoming-list">
-              {upcoming.map((d, i) => {
-                const fmt = formatUpcoming(d)
-                return (
-                  <li key={d.toISOString()} className="landing-upcoming-item">
-                    <div className="landing-upcoming-date">
-                      <span className="landing-upcoming-dow">{fmt.weekday}</span>
-                      <span className="landing-upcoming-day">{fmt.date}</span>
-                    </div>
-                    <div className="landing-upcoming-info">
-                      <span className="landing-upcoming-desk">{MOCK_UPCOMING_DESKS[i]}</span>
-                      <span className="landing-upcoming-area">{MOCK_UPCOMING_AREAS[i]}</span>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          </aside>
+          <div className="landing-hero-panels">
+            <aside className="landing-upcoming" aria-label="Upcoming desk bookings">
+              <h2 className="landing-upcoming-title">Upcoming bookings.</h2>
+              <ul className="landing-upcoming-list">
+                {upcoming.map((d, i) => {
+                  const fmt = formatUpcoming(d)
+                  return (
+                    <li key={d.toISOString()} className="landing-upcoming-item">
+                      <div className="landing-upcoming-date">
+                        <span className="landing-upcoming-dow">{fmt.weekday}</span>
+                        <span className="landing-upcoming-day">{fmt.date}</span>
+                      </div>
+                      <div className="landing-upcoming-info">
+                        <span className="landing-upcoming-desk">{MOCK_UPCOMING_DESKS[i]}</span>
+                        <span className="landing-upcoming-area">{MOCK_UPCOMING_AREAS[i]}</span>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </aside>
+
+            <aside className="landing-suggested" aria-label="Suggested desk booking">
+              <h2 className="landing-upcoming-title">Suggested booking.</h2>
+              <div className="landing-upcoming-item landing-suggested-desk-row">
+                <div className="landing-upcoming-date">
+                  <span className="landing-upcoming-dow">{suggestedFmt.weekday}</span>
+                  <span className="landing-upcoming-day">{suggestedFmt.date}</span>
+                </div>
+                <div className="landing-upcoming-info">
+                  <span className="landing-upcoming-desk">{suggestedDesk.name}</span>
+                  <span className="landing-upcoming-area">{suggestedDesk.neighbourhood}</span>
+                </div>
+              </div>
+              <p className="landing-suggested-reason">
+                Based on your office days &amp; preferrences.
+              </p>
+              <button className="landing-btn landing-btn-primary landing-suggested-btn" onClick={onOpenFloorPlan}>
+                Book now
+              </button>
+            </aside>
+          </div>
         </div>
         <div className="landing-countdown">
           <img src={clock} alt="" className="landing-countdown-icon" aria-hidden="true" />
@@ -187,6 +295,45 @@ function Landing({ onOpenFloorPlan, onOpenSearch, onOpenProfile }: LandingProps)
           <button className="landing-btn landing-btn-primary" onClick={onOpenProfile}>Profile</button>
         </div>
       </section>
+
+      {checkedIn && (
+        <div className="booking-confirm-backdrop" role="presentation">
+          <div
+            className="booking-confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="checkin-confirm-title"
+          >
+            <div className="booking-confirm-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="36" height="36">
+                <circle cx="12" cy="12" r="11" fill="#16a34a" />
+                <path
+                  d="M7 12.5l3.5 3.5L17 8.5"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <h2 id="checkin-confirm-title" className="booking-confirm-title">
+              You're checked in!
+            </h2>
+            <p className="booking-confirm-text">
+              Welcome in, {firstName}. Your check-in has been recorded for today.
+            </p>
+            <button
+              type="button"
+              className="booking-confirm-btn"
+              onClick={() => setCheckedIn(false)}
+              autoFocus
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

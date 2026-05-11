@@ -1,10 +1,22 @@
+import asyncio
 from datetime import date
 from typing import List, Optional
 
 import azure.functions as func
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
+from auth import ClientPrincipal, get_current_principal, get_current_user
+
+from booking import (
+    group_select_desks,
+    persist_bookings,
+    select_desks,
+    user_booked_days,
+    user_holiday_days,
+)
+from database import get_db
 from graph_calendar import (
     GraphAPIError,
     GraphAuthError,
@@ -12,6 +24,7 @@ from graph_calendar import (
     UserNotFoundError,
     work_location_by_day,
 )
+from models import Booking, Desk, User
 
 
 app = func.FunctionApp()
@@ -35,6 +48,307 @@ class WorkLocationResponse(BaseModel):
 @fast_api.get("/api/health", response_model=HealthCheck)
 def health_check():
     return HealthCheck()
+
+
+class MeResponse(BaseModel):
+    id: str
+    full_name: str
+    email: str
+    upn: Optional[str]
+    team: str
+    role: str
+    location: str
+    preferred_neighbourhood: Optional[str]
+    identity_provider: str
+    is_manager: bool
+    reports: List[str]
+
+    class Config:
+        from_attributes = True
+
+
+class DeskResponse(BaseModel):
+    id: str
+    name: str
+    floor: str
+    neighbourhood: str
+    x: float
+    y: float
+
+
+class AutoBookRequest(BaseModel):
+    target_upn: str
+    start: date
+    end: date
+
+
+class BookingResult(BaseModel):
+    date: str
+    desk_id: Optional[str] = None
+    desk_name: Optional[str] = None
+    skipped_reason: Optional[str] = None
+
+
+class AutoBookResponse(BaseModel):
+    target_user: str
+    booked: List[BookingResult]
+    skipped: List[BookingResult]
+
+
+def _resolve_target(db: Session, identifier: str) -> User:
+    target = (
+        db.query(User)
+        .filter((User.upn == identifier) | (User.email == identifier))
+        .first()
+    )
+    if not target:
+        raise HTTPException(status_code=404, detail="Target user not found")
+    return target
+
+
+def _authorize_for_target(caller: User, target: User) -> None:
+    if target.id == caller.id:
+        return
+    if target.line_manager_email and target.line_manager_email == caller.email:
+        return
+    raise HTTPException(status_code=403, detail="Not authorized for this user")
+
+
+@fast_api.get("/api/users/me", response_model=MeResponse)
+def get_me(
+    principal: ClientPrincipal = Depends(get_current_principal),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Returns the logged-in user's DB record, matched by UPN from SWA auth."""
+    reports = (
+        db.query(User).filter(User.line_manager_email == user.email).all()
+    )
+    return MeResponse(
+        id=user.id,
+        full_name=user.full_name,
+        email=user.email,
+        upn=user.upn,
+        team=user.team,
+        role=user.role,
+        location=user.location,
+        preferred_neighbourhood=user.preferred_neighbourhood,
+        identity_provider=principal.identity_provider,
+        is_manager=len(reports) > 0,
+        reports=[r.upn or r.email for r in reports],
+    )
+
+
+@fast_api.get(
+    "/api/desks",
+    response_model=List[DeskResponse],
+    dependencies=[Depends(get_current_user)],
+)
+def list_desks(db: Session = Depends(get_db)):
+    rows = db.query(Desk).order_by(Desk.id.asc()).all()
+    return [
+        DeskResponse(
+            id=d.id,
+            name=d.name,
+            floor=d.floor,
+            neighbourhood=d.neighbourhood,
+            x=d.x,
+            y=d.y,
+        )
+        for d in rows
+    ]
+
+
+@fast_api.post("/api/auto-book", response_model=AutoBookResponse)
+async def auto_book(
+    body: AutoBookRequest,
+    caller: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if body.end < body.start:
+        raise HTTPException(status_code=400, detail="end must be >= start")
+    target = _resolve_target(db, body.target_upn)
+    _authorize_for_target(caller, target)
+
+    try:
+        graph_days = await work_location_by_day(
+            target.upn or target.email, body.start, body.end
+        )
+    except UserNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except MailboxNotProvisionedError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except GraphAuthError as exc:
+        raise HTTPException(status_code=500, detail=f"Auth error: {exc}") from exc
+    except GraphAPIError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    office_dates = [
+        date.fromisoformat(d["date"]) for d in graph_days if d["location"] == "office"
+    ]
+    already_booked = user_booked_days(db, target.id, body.start, body.end)
+    holiday_set = user_holiday_days(db, target.id, body.start, body.end)
+
+    skipped: List[BookingResult] = []
+    bookable: List[date] = []
+    for d in office_dates:
+        ds = d.isoformat()
+        if ds in already_booked:
+            skipped.append(BookingResult(date=ds, skipped_reason="already booked"))
+        elif ds in holiday_set:
+            skipped.append(BookingResult(date=ds, skipped_reason="on holiday"))
+        else:
+            bookable.append(d)
+
+    selections = select_desks(db, target, bookable)
+
+    booked: List[BookingResult] = []
+    to_persist: dict[str, Optional[str]] = {}
+    for d in bookable:
+        ds = d.isoformat()
+        desk_id = selections.get(ds)
+        if desk_id is None:
+            skipped.append(BookingResult(date=ds, skipped_reason="no available desk"))
+            continue
+        desk = db.query(Desk).filter(Desk.id == desk_id).first()
+        booked.append(
+            BookingResult(date=ds, desk_id=desk_id, desk_name=desk.name if desk else None)
+        )
+        to_persist[ds] = desk_id
+
+    persist_bookings(db, target.id, to_persist)
+    return AutoBookResponse(
+        target_user=target.upn or target.email, booked=booked, skipped=skipped
+    )
+
+
+class GroupBookRequest(BaseModel):
+    team: Optional[str] = None  # omit to use caller's own team
+    start: date
+    end: date
+
+
+class MemberBookingResult(BaseModel):
+    member: str
+    booked: List[BookingResult]
+    skipped: List[BookingResult]
+
+
+class GroupBookResponse(BaseModel):
+    team: str
+    members: List[MemberBookingResult]
+
+
+@fast_api.post("/api/group-book", response_model=GroupBookResponse)
+async def group_book(
+    body: GroupBookRequest,
+    caller: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if body.end < body.start:
+        raise HTTPException(status_code=400, detail="end must be >= start")
+
+    team_name = body.team or caller.team
+    members: list[User] = (
+        db.query(User)
+        .filter(User.team == team_name)
+        .filter(
+            (User.line_manager_email == caller.email) | (User.id == caller.id)
+        )
+        .all()
+    )
+    if not members:
+        raise HTTPException(
+            status_code=403,
+            detail=f"No members in team '{team_name}' that you are authorized to book for",
+        )
+
+    async def _office_dates(member: User) -> tuple[str, list[date]]:
+        try:
+            graph_days = await work_location_by_day(
+                member.upn or member.email, body.start, body.end
+            )
+            return member.id, [
+                date.fromisoformat(d["date"]) for d in graph_days if d["location"] == "office"
+            ]
+        except (UserNotFoundError, MailboxNotProvisionedError, GraphAuthError, GraphAPIError):
+            return member.id, []
+
+    calendar_results = await asyncio.gather(*[_office_dates(m) for m in members])
+    office_dates_per_member: dict[str, list[date]] = dict(calendar_results)
+
+    members_by_day: dict[date, list[User]] = {}
+    member_skipped: dict[str, list[BookingResult]] = {m.id: [] for m in members}
+
+    for m in members:
+        already_booked = user_booked_days(db, m.id, body.start, body.end)
+        holiday_set = user_holiday_days(db, m.id, body.start, body.end)
+        for d in office_dates_per_member.get(m.id, []):
+            ds = d.isoformat()
+            if ds in already_booked:
+                member_skipped[m.id].append(BookingResult(date=ds, skipped_reason="already booked"))
+            elif ds in holiday_set:
+                member_skipped[m.id].append(BookingResult(date=ds, skipped_reason="on holiday"))
+            else:
+                members_by_day.setdefault(d, []).append(m)
+
+    selections = group_select_desks(db, members_by_day)
+
+    member_results: list[MemberBookingResult] = []
+    for m in members:
+        booked: list[BookingResult] = []
+        to_persist: dict[str, Optional[str]] = {}
+        bookable_days = [d for d, ms in members_by_day.items() if any(x.id == m.id for x in ms)]
+        for d in bookable_days:
+            ds = d.isoformat()
+            desk_id = selections.get(ds, {}).get(m.id)
+            if desk_id is None:
+                member_skipped[m.id].append(
+                    BookingResult(date=ds, skipped_reason="no available desk")
+                )
+                continue
+            desk = db.query(Desk).filter(Desk.id == desk_id).first()
+            booked.append(
+                BookingResult(date=ds, desk_id=desk_id, desk_name=desk.name if desk else None)
+            )
+            to_persist[ds] = desk_id
+        persist_bookings(db, m.id, to_persist)
+        member_results.append(
+            MemberBookingResult(member=m.upn or m.email, booked=booked, skipped=member_skipped[m.id])
+        )
+
+    return GroupBookResponse(team=team_name, members=member_results)
+
+
+@fast_api.get("/api/bookings", response_model=List[BookingResult])
+def list_bookings(
+    user: str = Query(..., description="UPN or email"),
+    start: date = Query(...),
+    end: date = Query(...),
+    caller: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if end < start:
+        raise HTTPException(status_code=400, detail="end must be >= start")
+    target = _resolve_target(db, user)
+    _authorize_for_target(caller, target)
+
+    rows = (
+        db.query(Booking)
+        .filter(Booking.user_id == target.id)
+        .filter(Booking.booking_date >= start.isoformat())
+        .filter(Booking.booking_date <= end.isoformat())
+        .order_by(Booking.booking_date.asc())
+        .all()
+    )
+    return [
+        BookingResult(
+            date=b.booking_date,
+            desk_id=b.desk_id,
+            desk_name=b.desk.name if b.desk else None,
+        )
+        for b in rows
+    ]
 
 
 @fast_api.get("/api/work-location", response_model=WorkLocationResponse)
