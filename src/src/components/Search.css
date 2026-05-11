@@ -58,6 +58,57 @@
   border-radius: 4px;
   padding: 6px 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-card-add {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  background: var(--color-secondary);
+  color: #ffffff;
+  border: 1px solid var(--color-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.search-card-add:hover {
+  opacity: 0.9;
+}
+
+.search-card-add-on {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-card-add-on:hover {
+  background: #15803d;
+  border-color: #15803d;
+  opacity: 1;
+}
+
+.search-card-tick {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 
 .search-card-row {
