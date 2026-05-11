@@ -10,6 +10,8 @@ import Profile from './components/Profile'
 import { useMemo, useState } from 'react'
 import { USERS } from './data/users'
 
+const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001'
+
 type View = 'landing' | 'floorplan' | 'search' | 'profile'
 
 function App() {
@@ -95,6 +97,13 @@ function App() {
     }
   }
 
+  const openSelfBooking = () => {
+    setGroupBookingIds(new Set([CURRENT_USER_ID]))
+    setAssignments(new Map())
+    setActiveColleagueId(CURRENT_USER_ID)
+    setCurrentView('floorplan')
+  }
+
   return (
     <div className={`app-container ${chatOpen ? 'chat-open' : ''} ${currentView !== 'floorplan' ? 'landing-view' : ''}`}>
       <TopBar
@@ -105,7 +114,7 @@ function App() {
       />
       {currentView === 'landing' ? (
         <Landing
-          onOpenFloorPlan={() => setCurrentView('floorplan')}
+          onOpenFloorPlan={openSelfBooking}
           onOpenSearch={() => setCurrentView('search')}
           onOpenProfile={() => setCurrentView('profile')}
         />
@@ -165,11 +174,14 @@ function App() {
               </svg>
             </div>
             <h2 id="booking-confirm-title" className="booking-confirm-title">
-              Group booking confirmed
+              {selectedColleagues.length === 1 && selectedColleagues[0].id === CURRENT_USER_ID
+                ? 'Desk booked'
+                : 'Group booking confirmed'}
             </h2>
             <p className="booking-confirm-text">
-              {selectedColleagues.length} desk{selectedColleagues.length === 1 ? '' : 's'} booked.
-              An email confirmation will be sent to you and each colleague shortly.
+              {selectedColleagues.length === 1 && selectedColleagues[0].id === CURRENT_USER_ID
+                ? 'Your desk has been booked. An email confirmation will be sent to you shortly.'
+                : `${selectedColleagues.length} desk${selectedColleagues.length === 1 ? '' : 's'} booked. An email confirmation will be sent to you and each colleague shortly.`}
             </p>
             <button
               type="button"
