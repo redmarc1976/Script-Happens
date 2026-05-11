@@ -30,7 +30,7 @@ function App() {
           onOpenSearch={() => setCurrentView('search')}
         />
       ) : currentView === 'search' ? (
-        <Search />
+        <Search onOpenFloorPlan={() => setCurrentView('floorplan')} />
       ) : (
         <>
           <Sidebar isOpen={sidebarOpen} selectedFloor={selectedFloor} onFloorChange={setSelectedFloor} selectedDate={selectedDate} onDateChange={setSelectedDate} />
