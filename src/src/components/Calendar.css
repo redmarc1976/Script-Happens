@@ -1,0 +1,81 @@
+.calendar {
+  padding: 10px 12px 14px;
+  border-top: 1px solid rgba(124, 58, 237, 0.15);
+  margin-top: auto;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.calendar-month {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-secondary);
+}
+
+.calendar-nav {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #9d84c2;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.calendar-nav:hover {
+  color: var(--color-primary);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendar-day-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9d84c2;
+  text-align: center;
+  padding: 2px 0 4px;
+  text-transform: uppercase;
+}
+
+.calendar-cell {
+  font-size: 11px;
+  text-align: center;
+  padding: 4px 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #444;
+}
+
+.calendar-cell.empty {
+  cursor: default;
+}
+
+.calendar-cell:not(.empty):hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.calendar-cell.today {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.calendar-cell.selected {
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-cell.selected.today {
+  background: var(--color-accent);
+  color: var(--color-secondary);
+}

@@ -1,4 +1,10 @@
 :root {
+  --color-primary: #7C3AED;
+  --color-secondary: #4C1D95;
+  --color-accent: #FDE68A;
+  --color-bg: #FAF5FF;
+  --color-primary-light: rgba(124, 58, 237, 0.1);
+
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;

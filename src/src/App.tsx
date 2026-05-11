@@ -13,6 +13,7 @@ function App() {
   const [chatOpen, setChatOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [selectedFloor, setSelectedFloor] = useState('ground')
+  const [selectedDate, setSelectedDate] = useState(new Date())
 
   return (
     <div className={`app-container ${chatOpen ? 'chat-open' : ''}`}>
@@ -20,7 +21,7 @@ function App() {
         onToggle={() => setChatOpen(!chatOpen)}
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
       />
-      <Sidebar isOpen={sidebarOpen} selectedFloor={selectedFloor} onFloorChange={setSelectedFloor} />
+      <Sidebar isOpen={sidebarOpen} selectedFloor={selectedFloor} onFloorChange={setSelectedFloor} selectedDate={selectedDate} onDateChange={setSelectedDate} />
       <MainPanel selectedFloor={selectedFloor} />
       {chatOpen && <ChatPanel />}
     </div>

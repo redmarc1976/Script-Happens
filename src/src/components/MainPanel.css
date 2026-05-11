@@ -25,7 +25,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #5b9bd5;
+  background: var(--color-primary);
   border: 2px solid white;
   transform: translate(-50%, -50%);
   cursor: pointer;
@@ -33,14 +33,14 @@
 }
 
 .desk-dot:hover {
-  background: #2c3e50;
+  background: var(--color-secondary);
   transform: translate(-50%, -50%) scale(1.4);
 }
 
 .desk-tooltip {
   position: absolute;
   transform: translate(14px, -50%);
-  background: #2c3e50;
+  background: var(--color-secondary);
   color: white;
   border-radius: 8px;
   padding: 14px 18px;
@@ -69,7 +69,7 @@
 }
 
 .desk-tooltip-label {
-  color: #8ab4d4;
+  color: #c4b5fd;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;

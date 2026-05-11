@@ -54,8 +54,8 @@
 }
 
 
-.topbar { background: #2c3e50; color: #ffffff; }
-.sidebar { background: #f4f6f8; color: #333333; }
+.topbar { background: var(--color-secondary); color: #ffffff; }
+.sidebar { background: var(--color-bg); color: #333333; }
 .main { background: #ffffff; color: #333333; }
-.chat-panel { background: #f4f6f8; color: #333333; }
+.chat-panel { background: var(--color-bg); color: #333333; }
 

@@ -1,9 +1,12 @@
 import './Sidebar.css'
+import Calendar from './Calendar'
 
 interface SidebarProps {
   isOpen: boolean
   selectedFloor: string
   onFloorChange: (floor: string) => void
+  selectedDate: Date
+  onDateChange: (date: Date) => void
 }
 
 const FLOORS = [
@@ -11,7 +14,7 @@ const FLOORS = [
   { id: 'first', label: 'First' },
 ]
 
-function Sidebar({ isOpen, selectedFloor, onFloorChange }: SidebarProps) {
+function Sidebar({ isOpen, selectedFloor, onFloorChange, selectedDate, onDateChange }: SidebarProps) {
   return (
     <div className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       <div className="sidebar-section">
@@ -30,6 +33,7 @@ function Sidebar({ isOpen, selectedFloor, onFloorChange }: SidebarProps) {
           </button>
         ))}
       </div>
+      <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
     </div>
   )
 }
