@@ -9,3 +9,4 @@ uvicorn
 sqlalchemy
 pyodbc
 python-dotenv
+alembic
