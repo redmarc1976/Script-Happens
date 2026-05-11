@@ -17,7 +17,7 @@ function matches(user: User, query: string): boolean {
 function todayStatus(user: User): string {
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
   const key = days[new Date().getDay()]
-  const pattern = user.defaultWorkingPattern as Record<string, string | undefined>
+  const pattern = user.defaultWorkingPattern as unknown as Record<string, string | undefined>
   const status = pattern[key]
   if (!status) return 'Weekend'
   if (status === 'office') return 'In office today'
