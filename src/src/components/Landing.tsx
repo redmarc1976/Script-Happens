@@ -144,12 +144,12 @@ function Landing({ onOpenFloorPlan, onOpenSearch, onOpenProfile }: LandingProps)
           <h3 className="landing-quicklink-title">Floor Plan</h3>
           <p className="landing-quicklink-text">See the layout of the site and who's sat where.</p>
         </button>
-        <button className="landing-quicklink">
+        <button className="landing-quicklink" onClick={onOpenSearch}>
           <PeopleIcon />
           <h3 className="landing-quicklink-title">Team Bookings</h3>
           <p className="landing-quicklink-text">Book for your team, or for your forgetful colleague.</p>
         </button>
-        <button className="landing-quicklink" onClick={onOpenSearch}>
+        <button className="landing-quicklink">
           <SearchIcon />
           <h3 className="landing-quicklink-title">Search</h3>
           <p className="landing-quicklink-text">Looking for a colleague? Look no further.</p>
