@@ -23,11 +23,15 @@
     },
     {
       "route": "/logout",
-      "redirect": "/.auth/logout"
+      "redirect": "/.auth/logout?post_logout_redirect_uri=/"
     },
     {
       "route": "/.auth/login/github",
       "statusCode": 404
+    },
+    {
+      "route": "/*",
+      "allowedRoles": ["authenticated"]
     }
   ],
   "responseOverrides": {
