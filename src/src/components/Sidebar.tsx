@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './Sidebar.css'
 import Calendar from './Calendar'
 
@@ -16,29 +16,63 @@ const FLOORS = [
 ]
 
 const SITES = [
-  { id: 'london', label: 'London' },
   { id: 'bristol', label: 'Bristol' },
   { id: 'edinburgh', label: 'Edinburgh' },
   { id: 'halifax', label: 'Halifax' },
+  { id: 'leeds', label: 'Leeds' },
+  { id: 'london', label: 'London' },
   { id: 'manchester', label: 'Manchester' },
 ]
 
 function Sidebar({ isOpen, selectedFloor, onFloorChange, selectedDate, onDateChange }: SidebarProps) {
-  const [selectedSite, setSelectedSite] = useState('london')
+  const [selectedSite, setSelectedSite] = useState('leeds')
+  const [siteMenuOpen, setSiteMenuOpen] = useState(false)
+  const siteRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!siteMenuOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      if (siteRef.current && !siteRef.current.contains(e.target as Node)) {
+        setSiteMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [siteMenuOpen])
+
+  const selectedSiteLabel = SITES.find(s => s.id === selectedSite)?.label
 
   return (
     <div className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       <div className="sidebar-section">
         <div className="sidebar-section-label">Site</div>
-        <select
-          className="sidebar-site-select"
-          value={selectedSite}
-          onChange={(e) => setSelectedSite(e.target.value)}
-        >
-          {SITES.map(site => (
-            <option key={site.id} value={site.id}>{site.label}</option>
-          ))}
-        </select>
+        <div className="sidebar-site-dropdown" ref={siteRef}>
+          <button
+            className="sidebar-nav-item active sidebar-site-trigger"
+            onClick={() => setSiteMenuOpen(!siteMenuOpen)}
+            aria-expanded={siteMenuOpen}
+          >
+            <span>{selectedSiteLabel}</span>
+            <span className={`sidebar-site-chevron ${siteMenuOpen ? 'open' : ''}`}>▾</span>
+          </button>
+          {siteMenuOpen && (
+            <div className="sidebar-site-options" role="menu">
+              {SITES.map(site => (
+                <button
+                  key={site.id}
+                  className={`sidebar-nav-item ${selectedSite === site.id ? 'active' : ''}`}
+                  role="menuitem"
+                  onClick={() => {
+                    setSelectedSite(site.id)
+                    setSiteMenuOpen(false)
+                  }}
+                >
+                  {site.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       <div className="sidebar-section">
         <div className="sidebar-section-label">Floor</div>

@@ -62,12 +62,6 @@
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  transition: border-color 0.15s;
-}
-
-.topbar-profile-btn:hover .topbar-profile-img {
-  border-color: var(--color-accent);
 }
 
 .topbar-profile-menu {
@@ -96,6 +90,6 @@
 }
 
 .topbar-profile-item:hover {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+  background: var(--color-accent);
+  color: var(--color-secondary);
 }
