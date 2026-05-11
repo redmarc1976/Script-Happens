@@ -59,6 +59,7 @@ class User(Base):
     bookings = relationship("Booking", back_populates="user")
     holidays = relationship("Holiday", back_populates="user")
     preferences = relationship("Preference", secondary=user_preference_association)
+    working_pattern = relationship("WorkingPattern", back_populates="user", uselist=False)
 
 
 class Preference(Base):
@@ -98,3 +99,16 @@ class Holiday(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="holidays")
+
+
+class WorkingPattern(Base):
+    __tablename__ = "working_patterns"
+
+    user_id = Column(String(100), ForeignKey("users.id"), primary_key=True)
+    monday = Column(String(20), nullable=False)     # 'anchor day' or 'hybrid'
+    tuesday = Column(String(20), nullable=False)
+    wednesday = Column(String(20), nullable=False)
+    thursday = Column(String(20), nullable=False)
+    friday = Column(String(20), nullable=False)
+
+    user = relationship("User", back_populates="working_pattern", uselist=False)

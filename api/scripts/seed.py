@@ -20,7 +20,7 @@ from sqlalchemy.orm import sessionmaker
 # Make models importable when running as a script from the api/ dir
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from models import Base, Desk, User, Booking, Holiday, Preference  # noqa: E402
+from models import Base, Desk, User, Booking, Holiday, Preference, WorkingPattern  # noqa: E402
 from models import desk_preference_association, user_preference_association  # noqa: E402
 
 
@@ -121,6 +121,7 @@ def wipe_all(session):
     session.execute(desk_preference_association.delete())
     session.query(Booking).delete()
     session.query(Holiday).delete()
+    session.query(WorkingPattern).delete()
     session.query(User).delete()
     session.query(Desk).delete()
     session.query(Preference).delete()
@@ -200,6 +201,28 @@ def seed_users(session, pref_objects):
     session.commit()
     print(f"  Created {len(user_objects)} users")
     return user_objects
+
+
+def seed_working_patterns(session, user_objects):
+    """Each weekday is either 'anchor day' (mandatory office) or 'hybrid' (flexible).
+
+    Derived from each user's `anchorDays` list in users.json.
+    """
+    print("Seeding working patterns...")
+    weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    with open(USERS_JSON) as f:
+        users_data = json.load(f)
+    count = 0
+    for u in users_data:
+        anchor_days = {d.lower() for d in (u.get("anchorDays") or [])}
+        pattern = WorkingPattern(
+            user_id=u["id"],
+            **{day: ("anchor day" if day in anchor_days else "hybrid") for day in weekdays},
+        )
+        session.add(pattern)
+        count += 1
+    session.commit()
+    print(f"  Created {count} working patterns")
 
 
 def seed_bookings(session, user_objects, desk_objects):
@@ -286,6 +309,7 @@ def main():
         pref_objects = seed_preferences(session)
         desk_objects = seed_desks(session, pref_objects)
         user_objects = seed_users(session, pref_objects)
+        seed_working_patterns(session, user_objects)
         seed_bookings(session, user_objects, desk_objects)
         seed_holidays(session, user_objects)
         print("\nSeed complete!")
