@@ -1,6 +1,6 @@
 .landing {
   background: #ffffff;
-  grid-column: 1 / -1;
+  grid-column: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -15,6 +15,122 @@
   background: var(--color-accent);
   padding: 40px 48px;
   color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.landing-hero-text {
+  flex: 1 1 auto;
+  min-width: 280px;
+}
+
+.landing-upcoming {
+  flex: 0 0 auto;
+  width: 280px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 14px 16px;
+  backdrop-filter: blur(2px);
+}
+
+.landing-upcoming-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px 0;
+  color: var(--color-secondary);
+}
+
+.landing-upcoming-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+.landing-upcoming-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.landing-upcoming-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.landing-upcoming-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.landing-upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.landing-upcoming-item:last-child {
+  border-bottom: none;
+}
+
+.landing-upcoming-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 44px;
+  flex-shrink: 0;
+  line-height: 1.1;
+}
+
+.landing-upcoming-dow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-secondary);
+  opacity: 0.7;
+}
+
+.landing-upcoming-day {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-secondary);
+}
+
+.landing-upcoming-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.landing-upcoming-desk {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-secondary);
+}
+
+.landing-upcoming-area {
+  font-size: 11px;
+  color: var(--color-secondary);
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .landing-upcoming {
+    width: 100%;
+  }
 }
 
 .landing-hero-title {

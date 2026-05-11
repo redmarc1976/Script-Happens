@@ -1,6 +1,6 @@
 .search-page {
   background: #ffffff;
-  grid-column: 1 / -1;
+  grid-column: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;

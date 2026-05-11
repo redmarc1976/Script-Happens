@@ -75,17 +75,62 @@ function DeskIcon() {
   )
 }
 
+const MOCK_UPCOMING_DESKS = ['G-W-B1-TL', 'G-W-B2-BR', 'F-NW-R1C2-TR']
+const MOCK_UPCOMING_AREAS = ['Windows', 'Windows', 'Open Plan']
+
+function nextWeekdays(count: number): Date[] {
+  const days: Date[] = []
+  const cursor = new Date()
+  cursor.setHours(0, 0, 0, 0)
+  while (days.length < count) {
+    cursor.setDate(cursor.getDate() + 1)
+    const dow = cursor.getDay()
+    if (dow !== 0 && dow !== 6) days.push(new Date(cursor))
+  }
+  return days
+}
+
+function formatUpcoming(d: Date): { weekday: string; date: string } {
+  return {
+    weekday: d.toLocaleDateString(undefined, { weekday: 'short' }),
+    date: d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' }),
+  }
+}
+
 function Landing({ onOpenFloorPlan, onOpenSearch, onOpenProfile }: LandingProps) {
+  const upcoming = nextWeekdays(3)
   return (
     <div className="landing">
       <section className="landing-hero">
         <div className="landing-hero-content">
-          <h1 className="landing-hero-title">Hi Daniel.<br />Your workspace, ready when you are.</h1>
-          <p className="landing-hero-subtitle">Find your space in seconds below.</p>
-          <div className="landing-hero-actions">
-            <button className="landing-btn landing-btn-primary" onClick={onOpenFloorPlan}>Book now</button>
-            <button className="landing-btn landing-btn-secondary">Check in</button>
+          <div className="landing-hero-text">
+            <h1 className="landing-hero-title">Hi Daniel.<br />Your workspace, ready when you are.</h1>
+            <p className="landing-hero-subtitle">Find your space in seconds below.</p>
+            <div className="landing-hero-actions">
+              <button className="landing-btn landing-btn-primary" onClick={onOpenFloorPlan}>Book now</button>
+              <button className="landing-btn landing-btn-secondary">Check in</button>
+            </div>
           </div>
+          <aside className="landing-upcoming" aria-label="Upcoming desk bookings">
+            <h2 className="landing-upcoming-title">Upcoming bookings</h2>
+            <ul className="landing-upcoming-list">
+              {upcoming.map((d, i) => {
+                const fmt = formatUpcoming(d)
+                return (
+                  <li key={d.toISOString()} className="landing-upcoming-item">
+                    <div className="landing-upcoming-date">
+                      <span className="landing-upcoming-dow">{fmt.weekday}</span>
+                      <span className="landing-upcoming-day">{fmt.date}</span>
+                    </div>
+                    <div className="landing-upcoming-info">
+                      <span className="landing-upcoming-desk">{MOCK_UPCOMING_DESKS[i]}</span>
+                      <span className="landing-upcoming-area">{MOCK_UPCOMING_AREAS[i]}</span>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </aside>
         </div>
         <div className="landing-countdown">
           <img src={clock} alt="" className="landing-countdown-icon" aria-hidden="true" />
