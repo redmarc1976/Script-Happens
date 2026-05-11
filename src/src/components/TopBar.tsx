@@ -3,6 +3,7 @@ import './TopBar.css'
 import logo from '../assets/Logo.png'
 import home from '../assets/Home.png'
 import profile from '../assets/Profile.png'
+import { useMe } from '../hooks/useMe'
 
 interface TopBarProps {
   onToggle: () => void
@@ -14,6 +15,7 @@ interface TopBarProps {
 function TopBar({ onToggle, onMenuToggle, onHome, onProfile }: TopBarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
+  const { me, loading } = useMe()
 
   useEffect(() => {
     if (!menuOpen) return
@@ -40,23 +42,29 @@ function TopBar({ onToggle, onMenuToggle, onHome, onProfile }: TopBarProps) {
       </div>
       <div className="topbar-actions">
         <button className="topbar-chat-btn" onClick={onToggle}>💬 Assistant</button>
-        <div className="topbar-profile-wrapper" ref={profileRef}>
-          <button
-            className="topbar-profile-btn"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Profile menu"
-            aria-expanded={menuOpen}
-          >
-            <img src={profile} alt="Profile" className="topbar-profile-img" />
-          </button>
-          {menuOpen && (
-            <div className="topbar-profile-menu" role="menu">
-              <button className="topbar-profile-item" role="menuitem" onClick={() => { onProfile(); setMenuOpen(false) }}>Profile</button>
-              <button className="topbar-profile-item" role="menuitem" onClick={() => setMenuOpen(false)}>Settings</button>
-              <button className="topbar-profile-item" role="menuitem" onClick={() => setMenuOpen(false)}>Logout</button>
-            </div>
-          )}
-        </div>
+        {!loading && !me ? (
+          <a className="topbar-signin-btn" href="/.auth/login/aad">Sign in</a>
+        ) : (
+          <div className="topbar-profile-wrapper" ref={profileRef}>
+            <button
+              className="topbar-profile-btn"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Profile menu"
+              aria-expanded={menuOpen}
+              title={me?.full_name}
+            >
+              <img src={profile} alt="Profile" className="topbar-profile-img" />
+            </button>
+            {menuOpen && (
+              <div className="topbar-profile-menu" role="menu">
+                {me && <div className="topbar-profile-item topbar-profile-name">{me.full_name}</div>}
+                <button className="topbar-profile-item" role="menuitem" onClick={() => { onProfile(); setMenuOpen(false) }}>Profile</button>
+                <button className="topbar-profile-item" role="menuitem" onClick={() => setMenuOpen(false)}>Settings</button>
+                <a className="topbar-profile-item" role="menuitem" href="/.auth/logout">Logout</a>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
