@@ -78,8 +78,23 @@ function DeskIcon() {
   )
 }
 
-const MOCK_UPCOMING_DESKS = ['G-W-B1-TL', 'G-W-B2-BR', 'F-NW-R1C2-TR']
-const MOCK_UPCOMING_AREAS = ['Windows', 'Windows', 'Open Plan']
+interface UpcomingBooking {
+  dateKey: string
+  date: Date
+  desk: string
+  area: string
+}
+
+function buildUpcomingBookings(): UpcomingBooking[] {
+  const desks = ['G-W-B1-TL', 'G-W-B2-BR', 'F-NW-R1C2-TR']
+  const areas = ['Windows', 'Windows', 'Open Plan']
+  return nextWeekdays(3).map((d, i) => ({
+    dateKey: d.toISOString(),
+    date: d,
+    desk: desks[i],
+    area: areas[i],
+  }))
+}
 
 // Profile preferences — these will come from the API once the backend is wired up
 const PROFILE_OFFICE_DAYS = ['Monday', 'Tuesday', 'Thursday']
@@ -120,9 +135,16 @@ function formatUpcoming(d: Date): { weekday: string; date: string } {
 }
 
 function Landing({ onOpenFloorPlan, onOpenSearch, onOpenSimpleSearch, onOpenProfile }: LandingProps) {
-  const upcoming = nextWeekdays(3)
+  const [upcomingBookings, setUpcomingBookings] = useState<UpcomingBooking[]>(buildUpcomingBookings)
   const [firstName, setFirstName] = useState('Daniel')
   const [checkedIn, setCheckedIn] = useState(false)
+  const [releaseTarget, setReleaseTarget] = useState<UpcomingBooking | null>(null)
+
+  const confirmRelease = () => {
+    if (!releaseTarget) return
+    setUpcomingBookings(prev => prev.filter(b => b.dateKey !== releaseTarget.dateKey))
+    setReleaseTarget(null)
+  }
 
   const suggestedDesk = useMemo(
     () => DESKS.find(d => d.neighbourhood === PROFILE_NEIGHBOURHOOD) ?? DESKS[0],
@@ -202,18 +224,29 @@ function Landing({ onOpenFloorPlan, onOpenSearch, onOpenSimpleSearch, onOpenProf
             <aside className="landing-upcoming" aria-label="Upcoming desk bookings">
               <h2 className="landing-upcoming-title">Upcoming bookings.</h2>
               <ul className="landing-upcoming-list">
-                {upcoming.map((d, i) => {
-                  const fmt = formatUpcoming(d)
+                {upcomingBookings.length === 0 && (
+                  <li className="landing-upcoming-empty">No upcoming bookings.</li>
+                )}
+                {upcomingBookings.map(b => {
+                  const fmt = formatUpcoming(b.date)
                   return (
-                    <li key={d.toISOString()} className="landing-upcoming-item">
+                    <li key={b.dateKey} className="landing-upcoming-item">
                       <div className="landing-upcoming-date">
                         <span className="landing-upcoming-dow">{fmt.weekday}</span>
                         <span className="landing-upcoming-day">{fmt.date}</span>
                       </div>
                       <div className="landing-upcoming-info">
-                        <span className="landing-upcoming-desk">{MOCK_UPCOMING_DESKS[i]}</span>
-                        <span className="landing-upcoming-area">{MOCK_UPCOMING_AREAS[i]}</span>
+                        <span className="landing-upcoming-desk">{b.desk}</span>
+                        <span className="landing-upcoming-area">{b.area}</span>
                       </div>
+                      <button
+                        type="button"
+                        className="landing-upcoming-cancel"
+                        onClick={() => setReleaseTarget(b)}
+                        aria-label={`Release booking for ${b.desk} on ${fmt.weekday} ${fmt.date}`}
+                      >
+                        Release
+                      </button>
                     </li>
                   )
                 })}
@@ -332,6 +365,46 @@ function Landing({ onOpenFloorPlan, onOpenSearch, onOpenSimpleSearch, onOpenProf
             >
               Done
             </button>
+          </div>
+        </div>
+      )}
+
+      {releaseTarget && (
+        <div className="booking-confirm-backdrop" role="presentation">
+          <div
+            className="booking-confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="release-confirm-title"
+          >
+            <div className="booking-confirm-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="36" height="36">
+                <circle cx="12" cy="12" r="11" fill="#dc2626" />
+                <path d="M8 8l8 8M16 8l-8 8" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <h2 id="release-confirm-title" className="booking-confirm-title">Release this desk?</h2>
+            <p className="booking-confirm-text">
+              Are you sure you want to release <strong>{releaseTarget.desk}</strong> on <strong>{formatUpcoming(releaseTarget.date).weekday} {formatUpcoming(releaseTarget.date).date}</strong>?<br /><br />
+              This will free the desk for others to book.
+            </p>
+            <div className="landing-release-actions">
+              <button
+                type="button"
+                className="booking-confirm-btn landing-release-confirm-btn"
+                onClick={confirmRelease}
+                autoFocus
+              >
+                Yes, release
+              </button>
+              <button
+                type="button"
+                className="booking-confirm-btn landing-release-cancel-btn"
+                onClick={() => setReleaseTarget(null)}
+              >
+                Keep booking
+              </button>
+            </div>
           </div>
         </div>
       )}
