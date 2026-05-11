@@ -102,3 +102,68 @@
 .sidebar-site-chevron.open {
   transform: translateY(-50%) rotate(180deg);
 }
+
+.sidebar-colleague {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #444;
+  cursor: pointer;
+  gap: 1px;
+}
+
+.sidebar-colleague:hover {
+  background: var(--color-primary-light);
+}
+
+.sidebar-colleague.active {
+  background: var(--color-accent);
+  border-left-color: var(--color-secondary);
+  padding-left: 13px;
+}
+
+.sidebar-colleague-name {
+  font-weight: 600;
+  color: var(--color-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-colleague-desk {
+  font-size: 11px;
+  color: #888;
+}
+
+.sidebar-colleague-desk.assigned {
+  color: #14532d;
+  font-weight: 600;
+}
+
+.sidebar-book-btn {
+  display: block;
+  margin: 12px 16px 4px;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  background: #16a34a;
+  color: #ffffff;
+  border: 1px solid #16a34a;
+  border-radius: 4px;
+  cursor: pointer;
+  width: calc(100% - 32px);
+  transition: background 0.15s;
+}
+
+.sidebar-book-btn:hover {
+  background: #15803d;
+  border-color: #15803d;
+}

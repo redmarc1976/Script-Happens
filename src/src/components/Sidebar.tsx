@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import './Sidebar.css'
 import Calendar from './Calendar'
+import type { User } from '../data/users'
+import { getDeskById } from '../data/desks'
 
 interface SidebarProps {
   isOpen: boolean
@@ -8,6 +10,12 @@ interface SidebarProps {
   onFloorChange: (floor: string) => void
   selectedDate: Date
   onDateChange: (date: Date) => void
+  selectedColleagues: User[]
+  activeColleagueId: string | null
+  assignments: Map<string, string>
+  onColleagueClick: (id: string) => void
+  canBook: boolean
+  onBook: () => void
 }
 
 const FLOORS = [
@@ -24,7 +32,19 @@ const SITES = [
   { id: 'manchester', label: 'Manchester' },
 ]
 
-function Sidebar({ isOpen, selectedFloor, onFloorChange, selectedDate, onDateChange }: SidebarProps) {
+function Sidebar({
+  isOpen,
+  selectedFloor,
+  onFloorChange,
+  selectedDate,
+  onDateChange,
+  selectedColleagues,
+  activeColleagueId,
+  assignments,
+  onColleagueClick,
+  canBook,
+  onBook,
+}: SidebarProps) {
   const [selectedSite, setSelectedSite] = useState('leeds')
   const [siteMenuOpen, setSiteMenuOpen] = useState(false)
   const siteRef = useRef<HTMLDivElement>(null)
@@ -86,6 +106,39 @@ function Sidebar({ isOpen, selectedFloor, onFloorChange, selectedDate, onDateCha
           </button>
         ))}
       </div>
+      {selectedColleagues.length > 0 && (
+        <div className="sidebar-section">
+          <div className="sidebar-section-label">Select Desks</div>
+          {selectedColleagues.map(user => {
+            const deskId = assignments.get(user.id)
+            const desk = deskId ? getDeskById(deskId) : null
+            const isActive = activeColleagueId === user.id
+            return (
+              <button
+                key={user.id}
+                type="button"
+                className={`sidebar-colleague${isActive ? ' active' : ''}`}
+                onClick={() => onColleagueClick(user.id)}
+                aria-pressed={isActive}
+              >
+                <span className="sidebar-colleague-name">{user.fullName}</span>
+                <span className={`sidebar-colleague-desk${desk ? ' assigned' : ''}`}>
+                  {desk ? desk.name : 'Pick a desk'}
+                </span>
+              </button>
+            )
+          })}
+          {canBook && (
+            <button
+              type="button"
+              className="sidebar-book-btn"
+              onClick={onBook}
+            >
+              Book
+            </button>
+          )}
+        </div>
+      )}
       <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
     </div>
   )

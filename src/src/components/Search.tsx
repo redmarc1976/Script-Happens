@@ -4,6 +4,8 @@ import { USERS, type User } from '../data/users'
 
 interface SearchProps {
   onOpenFloorPlan: () => void
+  groupBookingIds: Set<string>
+  onToggleGroupBooking: (userId: string) => void
 }
 
 type BookingDialog =
@@ -76,9 +78,8 @@ function statusLabel(s: ForecastStatus): string {
   return 'Weekend'
 }
 
-function Search({ onOpenFloorPlan }: SearchProps) {
+function Search({ onOpenFloorPlan, groupBookingIds, onToggleGroupBooking }: SearchProps) {
   const [query, setQuery] = useState('')
-  const [addedIds, setAddedIds] = useState<Set<string>>(new Set())
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [dialog, setDialog] = useState<BookingDialog>({ kind: 'closed' })
 
@@ -90,15 +91,6 @@ function Search({ onOpenFloorPlan }: SearchProps) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [dialog.kind])
-
-  const toggleAdded = (id: string) => {
-    setAddedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
 
   const toggleExpanded = (id: string) => {
     setExpandedId(prev => (prev === id ? null : id))
@@ -114,9 +106,9 @@ function Search({ onOpenFloorPlan }: SearchProps) {
 
   const selectedUsers = useMemo(() => {
     return USERS
-      .filter(u => addedIds.has(u.id))
+      .filter(u => groupBookingIds.has(u.id))
       .sort((a, b) => a.fullName.localeCompare(b.fullName))
-  }, [addedIds])
+  }, [groupBookingIds])
 
   return (
     <div className="search-page">
@@ -142,7 +134,7 @@ function Search({ onOpenFloorPlan }: SearchProps) {
           <p className="search-empty">No colleagues match "{query}".</p>
         )}
         {results.map(user => {
-          const added = addedIds.has(user.id)
+          const added = groupBookingIds.has(user.id)
           const expanded = expandedId === user.id
           const forecast = expanded ? buildForecast(user, 14) : null
           return (
@@ -194,7 +186,7 @@ function Search({ onOpenFloorPlan }: SearchProps) {
               <button
                 type="button"
                 className={`search-card-add${added ? ' search-card-add-on' : ''}`}
-                onClick={() => toggleAdded(user.id)}
+                onClick={() => onToggleGroupBooking(user.id)}
                 aria-pressed={added}
                 aria-label={added ? `Remove ${user.fullName} from group booking list` : `Add ${user.fullName} to group booking list`}
                 title={added ? 'Added — click to remove' : 'Add to Group Booking List'}
@@ -240,7 +232,7 @@ function Search({ onOpenFloorPlan }: SearchProps) {
                         <button
                           type="button"
                           className="search-aside-remove"
-                          onClick={() => toggleAdded(user.id)}
+                          onClick={() => onToggleGroupBooking(user.id)}
                           aria-label={`Remove ${user.fullName} from group booking list`}
                           title="Remove"
                         >
