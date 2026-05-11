@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date
 from typing import List, Optional
 
@@ -7,7 +8,9 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from auth import ClientPrincipal, get_current_principal, get_current_user
+
 from booking import (
+    group_select_desks,
     persist_bookings,
     select_desks,
     user_booked_days,
@@ -217,6 +220,104 @@ async def auto_book(
     return AutoBookResponse(
         target_user=target.upn or target.email, booked=booked, skipped=skipped
     )
+
+
+class GroupBookRequest(BaseModel):
+    team: Optional[str] = None  # omit to use caller's own team
+    start: date
+    end: date
+
+
+class MemberBookingResult(BaseModel):
+    member: str
+    booked: List[BookingResult]
+    skipped: List[BookingResult]
+
+
+class GroupBookResponse(BaseModel):
+    team: str
+    members: List[MemberBookingResult]
+
+
+@fast_api.post("/api/group-book", response_model=GroupBookResponse)
+async def group_book(
+    body: GroupBookRequest,
+    caller: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if body.end < body.start:
+        raise HTTPException(status_code=400, detail="end must be >= start")
+
+    team_name = body.team or caller.team
+    members: list[User] = (
+        db.query(User)
+        .filter(User.team == team_name)
+        .filter(
+            (User.line_manager_email == caller.email) | (User.id == caller.id)
+        )
+        .all()
+    )
+    if not members:
+        raise HTTPException(
+            status_code=403,
+            detail=f"No members in team '{team_name}' that you are authorized to book for",
+        )
+
+    async def _office_dates(member: User) -> tuple[str, list[date]]:
+        try:
+            graph_days = await work_location_by_day(
+                member.upn or member.email, body.start, body.end
+            )
+            return member.id, [
+                date.fromisoformat(d["date"]) for d in graph_days if d["location"] == "office"
+            ]
+        except (UserNotFoundError, MailboxNotProvisionedError, GraphAuthError, GraphAPIError):
+            return member.id, []
+
+    calendar_results = await asyncio.gather(*[_office_dates(m) for m in members])
+    office_dates_per_member: dict[str, list[date]] = dict(calendar_results)
+
+    members_by_day: dict[date, list[User]] = {}
+    member_skipped: dict[str, list[BookingResult]] = {m.id: [] for m in members}
+
+    for m in members:
+        already_booked = user_booked_days(db, m.id, body.start, body.end)
+        holiday_set = user_holiday_days(db, m.id, body.start, body.end)
+        for d in office_dates_per_member.get(m.id, []):
+            ds = d.isoformat()
+            if ds in already_booked:
+                member_skipped[m.id].append(BookingResult(date=ds, skipped_reason="already booked"))
+            elif ds in holiday_set:
+                member_skipped[m.id].append(BookingResult(date=ds, skipped_reason="on holiday"))
+            else:
+                members_by_day.setdefault(d, []).append(m)
+
+    selections = group_select_desks(db, members_by_day)
+
+    member_results: list[MemberBookingResult] = []
+    for m in members:
+        booked: list[BookingResult] = []
+        to_persist: dict[str, Optional[str]] = {}
+        bookable_days = [d for d, ms in members_by_day.items() if any(x.id == m.id for x in ms)]
+        for d in bookable_days:
+            ds = d.isoformat()
+            desk_id = selections.get(ds, {}).get(m.id)
+            if desk_id is None:
+                member_skipped[m.id].append(
+                    BookingResult(date=ds, skipped_reason="no available desk")
+                )
+                continue
+            desk = db.query(Desk).filter(Desk.id == desk_id).first()
+            booked.append(
+                BookingResult(date=ds, desk_id=desk_id, desk_name=desk.name if desk else None)
+            )
+            to_persist[ds] = desk_id
+        persist_bookings(db, m.id, to_persist)
+        member_results.append(
+            MemberBookingResult(member=m.upn or m.email, booked=booked, skipped=member_skipped[m.id])
+        )
+
+    return GroupBookResponse(team=team_name, members=member_results)
 
 
 @fast_api.get("/api/bookings", response_model=List[BookingResult])
