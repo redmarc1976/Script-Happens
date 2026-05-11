@@ -10,3 +10,5 @@ sqlalchemy
 pyodbc
 python-dotenv
 alembic
+msal
+httpx
