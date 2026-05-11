@@ -15,7 +15,7 @@ interface TopBarProps {
 function TopBar({ onToggle, onMenuToggle, onHome, onProfile }: TopBarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
-  const { me, loading } = useMe()
+  const { me, loading, error } = useMe()
 
   useEffect(() => {
     if (!menuOpen) return
@@ -42,7 +42,7 @@ function TopBar({ onToggle, onMenuToggle, onHome, onProfile }: TopBarProps) {
       </div>
       <div className="topbar-actions">
         <button className="topbar-chat-btn" onClick={onToggle}>💬 Assistant</button>
-        {!loading && !me ? (
+        {!loading && !me && !error ? (
           <a className="topbar-signin-btn" href="/.auth/login/aad">Sign in</a>
         ) : (
           <div className="topbar-profile-wrapper" ref={profileRef}>

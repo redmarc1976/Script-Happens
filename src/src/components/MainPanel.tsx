@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import groundImg from '../assets/floorplans/ground.png'
 import firstImg from '../assets/floorplans/first.png'
-import type { Desk } from '../data/desks'
+import { getDesksByFloor } from '../data/desks'
+import type { Desk, Floor } from '../data/desks'
 import { useDesks } from '../hooks/useDesks'
 import './MainPanel.css'
 
@@ -26,8 +27,10 @@ function MainPanel({
   onAssignDesk,
 }: MainPanelProps) {
   const image = FLOOR_IMAGES[selectedFloor]
-  const { desks: allDesks } = useDesks()
-  const desks = allDesks.filter((d) => d.floor === selectedFloor)
+  const { desks: apiDesks } = useDesks()
+  const desks = apiDesks.length > 0
+    ? apiDesks.filter(d => d.floor === selectedFloor)
+    : getDesksByFloor(selectedFloor as Floor)
   const [hoveredDesk, setHoveredDesk] = useState<Desk | null>(null)
 
   const deskToColleague = useMemo(() => {
