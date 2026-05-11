@@ -104,6 +104,60 @@ def select_desks(db: Session, user: User, days: Iterable[date]) -> dict[str, Opt
     return selection
 
 
+def group_select_desks(
+    db: Session,
+    members_by_day: dict[date, list[User]],
+) -> dict[str, dict[str, Optional[str]]]:
+    """Return {YYYY-MM-DD: {user_id: desk_id or None}}.
+
+    Picks the most-voted preferred_neighbourhood across all members as the
+    cluster target, assigns desks within that neighbourhood first, then spills
+    to any remaining available desk when it fills up.
+    """
+    from collections import Counter
+
+    all_members: dict[str, User] = {
+        m.id: m for day_members in members_by_day.values() for m in day_members
+    }
+    nb_votes: Counter = Counter(
+        m.preferred_neighbourhood for m in all_members.values() if m.preferred_neighbourhood
+    )
+    cluster_nb: Optional[str] = nb_votes.most_common(1)[0][0] if nb_votes else None
+
+    last_desk: dict[str, Optional[str]] = {
+        mid: last_desk_id_for_user(db, mid) for mid in all_members
+    }
+    result: dict[str, dict[str, Optional[str]]] = {}
+
+    for day in sorted(members_by_day):
+        members = members_by_day[day]
+        available = available_desks_for_day(db, day)
+        nb_pool = [d for d in available if d.neighbourhood == cluster_nb] if cluster_nb else []
+        overflow_pool = [d for d in available if d.neighbourhood != cluster_nb]
+
+        taken: set[str] = set()
+        day_assignments: dict[str, Optional[str]] = {}
+
+        for member in members:
+            candidates = [d for d in nb_pool if d.id not in taken]
+            if not candidates:
+                candidates = [d for d in overflow_pool if d.id not in taken]
+            if not candidates:
+                day_assignments[member.id] = None
+                continue
+            candidates.sort(
+                key=lambda d: _score(d, member, last_desk[member.id]), reverse=True
+            )
+            chosen = candidates[0]
+            day_assignments[member.id] = chosen.id
+            taken.add(chosen.id)
+            last_desk[member.id] = chosen.id
+
+        result[_ds(day)] = day_assignments
+
+    return result
+
+
 def persist_bookings(
     db: Session, user_id: str, selections: dict[str, Optional[str]]
 ) -> None:
