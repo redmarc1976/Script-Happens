@@ -1,17 +1,16 @@
-resource "azurerm_resource_group" "this" {
-  name     = "${var.project_name}-rg"
-  location = var.location
+data "azurerm_resource_group" "this" {
+  name = var.resource_group_name
 }
 
 resource "azurerm_static_web_app" "this" {
   name                = "${var.project_name}-swa"
-  resource_group_name = azurerm_resource_group.this.name
-  location            = azurerm_resource_group.this.location
+  resource_group_name = data.azurerm_resource_group.this.name
+  location            = data.azurerm_resource_group.this.location
 }
 
 resource "azurerm_mssql_server" "this" {
   name                         = "${var.project_name}-${var.resource_suffix}-sql"
-  resource_group_name          = azurerm_resource_group.this.name
+  resource_group_name          = data.azurerm_resource_group.this.name
   location                     = var.sql_location
   version                      = "12.0"
   administrator_login          = var.sql_admin_username
@@ -28,8 +27,8 @@ resource "azurerm_mssql_database" "this" {
 
 resource "azurerm_storage_account" "this" {
   name                     = "${var.project_name}${var.resource_suffix}sa"
-  resource_group_name      = azurerm_resource_group.this.name
-  location                 = azurerm_resource_group.this.location
+  resource_group_name      = data.azurerm_resource_group.this.name
+  location                 = data.azurerm_resource_group.this.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }

@@ -3,6 +3,11 @@ variable "subscription_id" {
   description = "subscription id we are deploying into"
 }
 
+variable "resource_group_name" {
+  type        = string
+  description = "name of existing resource group to deploy into"
+}
+
 variable "location" {
   type        = string
   description = "The azure region we are deploying to"
