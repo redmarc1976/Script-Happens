@@ -1,4 +1,5 @@
 import './TopBar.css'
+import logo from '../assets/Logo.png'
 
 interface TopBarProps {
   onToggle: () => void
@@ -10,8 +11,8 @@ function TopBar({ onToggle, onMenuToggle }: TopBarProps) {
     <div className="topbar">
       <div className="topbar-brand">
         <button className="topbar-hamburger" onClick={onMenuToggle}>☰</button>
-        <span className="topbar-logo">⬡</span>
-        <span className="topbar-title">NexaSpace</span>
+        <img src={logo} alt="Bucking@LBG logo" className="topbar-logo" />
+        <span className="topbar-title">Bucking@LBG</span>
       </div>
       <button className="topbar-chat-btn" onClick={onToggle}>💬 Assistant</button>
     </div>

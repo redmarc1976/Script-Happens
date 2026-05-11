@@ -1,1 +1,34 @@
 *.DS_Store
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+
+# Claude Code local settings
+.claude/

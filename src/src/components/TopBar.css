@@ -13,8 +13,9 @@
 }
 
 .topbar-logo {
-  font-size: 22px;
-  color: var(--color-accent);
+  height: 56px;
+  width: auto;
+  display: block;
 }
 
 .topbar-title {
