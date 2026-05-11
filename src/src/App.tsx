@@ -9,6 +9,8 @@ import Search from './components/Search'
 import Profile from './components/Profile'
 import { useMemo, useState } from 'react'
 import { USERS } from './data/users'
+import { getBookingForUser } from './data/bookings'
+import { getDeskById } from './data/desks'
 
 const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001'
 
@@ -24,6 +26,7 @@ function App() {
   const [activeColleagueId, setActiveColleagueId] = useState<string | null>(null)
   const [assignments, setAssignments] = useState<Map<string, string>>(new Map())
   const [bookingConfirmed, setBookingConfirmed] = useState(false)
+  const [bookingConflict, setBookingConflict] = useState<{ userName: string; deskName: string; floor: string } | null>(null)
 
   const selectedColleagues = useMemo(() => {
     return USERS
@@ -36,6 +39,18 @@ function App() {
     selectedColleagues.every(u => assignments.has(u.id))
 
   const confirmBooking = () => {
+    for (const user of selectedColleagues) {
+      const existing = getBookingForUser(user.id, selectedDate)
+      if (existing) {
+        const desk = getDeskById(existing.deskId)
+        setBookingConflict({
+          userName: user.fullName,
+          deskName: desk?.name.toUpperCase() ?? existing.deskId.toUpperCase(),
+          floor: desk ? desk.floor.charAt(0).toUpperCase() + desk.floor.slice(1) + ' Floor' : 'Unknown Floor',
+        })
+        return
+      }
+    }
     setBookingConfirmed(true)
   }
 
@@ -151,6 +166,40 @@ function App() {
         </>
       )}
       {chatOpen && <ChatPanel />}
+
+      {bookingConflict && (
+        <div className="booking-confirm-backdrop" role="presentation">
+          <div
+            className="booking-confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="booking-conflict-title"
+          >
+            <div className="booking-confirm-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="36" height="36">
+                <circle cx="12" cy="12" r="11" fill="#dc2626" />
+                <path d="M12 7v5" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
+                <circle cx="12" cy="16" r="1.2" fill="#ffffff" />
+              </svg>
+            </div>
+            <h2 id="booking-conflict-title" className="booking-confirm-title">Desk already booked</h2>
+            <p className="booking-confirm-text">
+              <strong>{bookingConflict.userName}</strong> already has a desk booked on this date.<br /><br />
+              Existing booking: <strong>{bookingConflict.deskName}</strong> on the <strong>{bookingConflict.floor}</strong>.<br /><br />
+              Only one desk can be booked per person per day. Please select a different date.
+            </p>
+            <button
+              type="button"
+              className="booking-confirm-btn"
+              onClick={() => setBookingConflict(null)}
+              autoFocus
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {bookingConfirmed && (
         <div className="booking-confirm-backdrop" role="presentation">
