@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import './Sidebar.css'
 import Calendar from './Calendar'
 
@@ -14,12 +15,30 @@ const FLOORS = [
   { id: 'first', label: 'First' },
 ]
 
+const SITES = [
+  { id: 'london', label: 'London' },
+  { id: 'bristol', label: 'Bristol' },
+  { id: 'edinburgh', label: 'Edinburgh' },
+  { id: 'halifax', label: 'Halifax' },
+  { id: 'manchester', label: 'Manchester' },
+]
+
 function Sidebar({ isOpen, selectedFloor, onFloorChange, selectedDate, onDateChange }: SidebarProps) {
+  const [selectedSite, setSelectedSite] = useState('london')
+
   return (
     <div className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       <div className="sidebar-section">
         <div className="sidebar-section-label">Site</div>
-        <button className="sidebar-nav-item active">Site 1</button>
+        <select
+          className="sidebar-site-select"
+          value={selectedSite}
+          onChange={(e) => setSelectedSite(e.target.value)}
+        >
+          {SITES.map(site => (
+            <option key={site.id} value={site.id}>{site.label}</option>
+          ))}
+        </select>
       </div>
       <div className="sidebar-section">
         <div className="sidebar-section-label">Floor</div>

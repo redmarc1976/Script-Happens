@@ -38,7 +38,7 @@
 }
 
 .sidebar-nav-item.active {
-  background: var(--color-primary-light);
+  background: var(--color-accent);
   color: var(--color-secondary);
   font-weight: 600;
   border-left: 3px solid var(--color-accent);
@@ -78,4 +78,24 @@
   border-radius: 4px;
   object-fit: cover;
   border: 1px solid #d0d5dd;
+}
+
+.sidebar-site-select {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 4px 16px;
+  background: var(--color-accent);
+  color: var(--color-secondary);
+  border: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sidebar-site-select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
 }

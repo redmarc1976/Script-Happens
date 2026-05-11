@@ -12,34 +12,34 @@ export interface Desk {
 // 2×2 = 4 desks
 function c4(id: string, floor: Floor, nb: string, cx: number, cy: number): Desk[] {
   return [
-    { id: `${id}-tl`, name: `${id}-TL`, floor, neighbourhood: nb, x: cx - 1.5, y: cy - 1.5 },
-    { id: `${id}-tr`, name: `${id}-TR`, floor, neighbourhood: nb, x: cx + 1.5, y: cy - 1.5 },
-    { id: `${id}-bl`, name: `${id}-BL`, floor, neighbourhood: nb, x: cx - 1.5, y: cy + 1.5 },
-    { id: `${id}-br`, name: `${id}-BR`, floor, neighbourhood: nb, x: cx + 1.5, y: cy + 1.5 },
+    { id: `${id}-tl`, name: `${id}-TL`, floor, neighbourhood: nb, x: cx - 1.5, y: cy - 2 },
+    { id: `${id}-tr`, name: `${id}-TR`, floor, neighbourhood: nb, x: cx + 1.5, y: cy - 2 },
+    { id: `${id}-bl`, name: `${id}-BL`, floor, neighbourhood: nb, x: cx - 1.5, y: cy + 2 },
+    { id: `${id}-br`, name: `${id}-BR`, floor, neighbourhood: nb, x: cx + 1.5, y: cy + 2 },
   ]
 }
 
 // 2 wide × 3 deep = 6 desks (portrait)
 function c6(id: string, floor: Floor, nb: string, cx: number, cy: number): Desk[] {
   return [
-    { id: `${id}-t1`, name: `${id}-T1`, floor, neighbourhood: nb, x: cx - 1.5, y: cy - 3 },
-    { id: `${id}-t2`, name: `${id}-T2`, floor, neighbourhood: nb, x: cx + 1.5, y: cy - 3 },
-    { id: `${id}-m1`, name: `${id}-M1`, floor, neighbourhood: nb, x: cx - 1.5, y: cy },
-    { id: `${id}-m2`, name: `${id}-M2`, floor, neighbourhood: nb, x: cx + 1.5, y: cy },
-    { id: `${id}-b1`, name: `${id}-B1`, floor, neighbourhood: nb, x: cx - 1.5, y: cy + 3 },
-    { id: `${id}-b2`, name: `${id}-B2`, floor, neighbourhood: nb, x: cx + 1.5, y: cy + 3 },
+    { id: `${id}-t1`, name: `${id}-T1`, floor, neighbourhood: nb, x: cx - 2, y: cy - 3 },
+    { id: `${id}-t2`, name: `${id}-T2`, floor, neighbourhood: nb, x: cx + 2, y: cy - 3 },
+    { id: `${id}-m1`, name: `${id}-M1`, floor, neighbourhood: nb, x: cx - 2, y: cy },
+    { id: `${id}-m2`, name: `${id}-M2`, floor, neighbourhood: nb, x: cx + 2, y: cy },
+    { id: `${id}-b1`, name: `${id}-B1`, floor, neighbourhood: nb, x: cx - 2, y: cy + 3 },
+    { id: `${id}-b2`, name: `${id}-B2`, floor, neighbourhood: nb, x: cx + 2, y: cy + 3 },
   ]
 }
 
 // 3 wide × 2 deep = 6 desks (landscape)
 function c6l(id: string, floor: Floor, nb: string, cx: number, cy: number): Desk[] {
   return [
-    { id: `${id}-tl`, name: `${id}-TL`, floor, neighbourhood: nb, x: cx - 3.5, y: cy - 1.5 },
-    { id: `${id}-tm`, name: `${id}-TM`, floor, neighbourhood: nb, x: cx,       y: cy - 1.5 },
-    { id: `${id}-tr`, name: `${id}-TR`, floor, neighbourhood: nb, x: cx + 3.5, y: cy - 1.5 },
-    { id: `${id}-bl`, name: `${id}-BL`, floor, neighbourhood: nb, x: cx - 3.5, y: cy + 1.5 },
-    { id: `${id}-bm`, name: `${id}-BM`, floor, neighbourhood: nb, x: cx,       y: cy + 1.5 },
-    { id: `${id}-br`, name: `${id}-BR`, floor, neighbourhood: nb, x: cx + 3.5, y: cy + 1.5 },
+    { id: `${id}-tl`, name: `${id}-TL`, floor, neighbourhood: nb, x: cx - 3.5, y: cy - 2 },
+    { id: `${id}-tm`, name: `${id}-TM`, floor, neighbourhood: nb, x: cx,       y: cy - 2 },
+    { id: `${id}-tr`, name: `${id}-TR`, floor, neighbourhood: nb, x: cx + 3.5, y: cy - 2 },
+    { id: `${id}-bl`, name: `${id}-BL`, floor, neighbourhood: nb, x: cx - 3.5, y: cy + 2 },
+    { id: `${id}-bm`, name: `${id}-BM`, floor, neighbourhood: nb, x: cx,       y: cy + 2 },
+    { id: `${id}-br`, name: `${id}-BR`, floor, neighbourhood: nb, x: cx + 3.5, y: cy + 2 },
   ]
 }
 
