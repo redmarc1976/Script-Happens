@@ -40,7 +40,7 @@ interface ForecastDay {
 function dayStatusOf(user: User, date: Date): ForecastStatus {
   const idx = date.getDay()
   if (idx === 0 || idx === 6) return 'weekend'
-  const pattern = user.defaultWorkingPattern as Record<string, ForecastStatus | undefined>
+  const pattern = user.defaultWorkingPattern as unknown as Record<string, ForecastStatus | undefined>
   return pattern[DAY_KEYS[idx]] ?? 'not-working'
 }
 
