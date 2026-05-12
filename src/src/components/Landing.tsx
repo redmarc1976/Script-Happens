@@ -5,6 +5,7 @@ import { DESKS } from '../data/desks'
 
 interface LandingProps {
   onOpenFloorPlan: () => void
+  onBookSuggestedDesk: (deskId: string) => void
   onOpenSearch: () => void
   onOpenSimpleSearch: () => void
   onOpenProfile: () => void
@@ -134,7 +135,7 @@ function formatUpcoming(d: Date): { weekday: string; date: string } {
   }
 }
 
-function Landing({ onOpenFloorPlan, onOpenSearch, onOpenSimpleSearch, onOpenProfile }: LandingProps) {
+function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSimpleSearch, onOpenProfile }: LandingProps) {
   const [upcomingBookings, setUpcomingBookings] = useState<UpcomingBooking[]>(buildUpcomingBookings)
   const [firstName, setFirstName] = useState('Daniel')
   const [checkedIn, setCheckedIn] = useState(false)
@@ -268,7 +269,7 @@ function Landing({ onOpenFloorPlan, onOpenSearch, onOpenSimpleSearch, onOpenProf
               <p className="landing-suggested-reason">
                 Based on your office days &amp; preferrences.
               </p>
-              <button className="landing-btn landing-btn-primary landing-suggested-btn" onClick={onOpenFloorPlan}>
+              <button className="landing-btn landing-btn-primary landing-suggested-btn" onClick={() => onBookSuggestedDesk(suggestedDesk.id)}>
                 Book now
               </button>
             </aside>

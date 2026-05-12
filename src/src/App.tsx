@@ -88,7 +88,9 @@ function App() {
       next.set(activeColleagueId, deskId)
       return next
     })
-    // Auto-advance: pick next colleague (in alphabetical order) without an assignment
+    // Auto-advance to the next unassigned colleague in group bookings.
+    // In single-user mode keep the user active so they can change their desk.
+    if (selectedColleagues.length <= 1) return
     const orderedIds = selectedColleagues.map(u => u.id)
     const startIdx = orderedIds.indexOf(activeColleagueId)
     let nextActive: string | null = null
@@ -119,6 +121,15 @@ function App() {
     setCurrentView('floorplan')
   }
 
+  const openSelfBookingWithDesk = (deskId: string) => {
+    const desk = getDeskById(deskId)
+    setGroupBookingIds(new Set([CURRENT_USER_ID]))
+    setAssignments(new Map([[CURRENT_USER_ID, deskId]]))
+    setActiveColleagueId(CURRENT_USER_ID)
+    if (desk) setSelectedFloor(desk.floor)
+    setCurrentView('floorplan')
+  }
+
   return (
     <div className={`app-container ${chatOpen ? 'chat-open' : ''} ${currentView !== 'floorplan' ? 'landing-view' : ''}`}>
       <TopBar
@@ -130,6 +141,7 @@ function App() {
       {currentView === 'landing' ? (
         <Landing
           onOpenFloorPlan={openSelfBooking}
+          onBookSuggestedDesk={openSelfBookingWithDesk}
           onOpenSearch={() => setCurrentView('search')}
           onOpenSimpleSearch={() => setCurrentView('simplesearch')}
           onOpenProfile={() => setCurrentView('profile')}

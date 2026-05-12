@@ -64,8 +64,7 @@ function TopBar({ onToggle, onMenuToggle, onHome, onProfile }: TopBarProps) {
               <div className="topbar-profile-menu" role="menu">
                 {me && <div className="topbar-profile-item topbar-profile-name">{me.full_name}</div>}
                 <button className="topbar-profile-item" role="menuitem" onClick={() => { onProfile(); setMenuOpen(false) }}>Profile</button>
-                <button className="topbar-profile-item" role="menuitem" onClick={() => setMenuOpen(false)}>Settings</button>
-                <a className="topbar-profile-item" role="menuitem" href="/.auth/logout?post_logout_redirect_uri=/">Logout</a>
+<a className="topbar-profile-item" role="menuitem" href="/.auth/logout?post_logout_redirect_uri=/">Logout</a>
               </div>
             )}
           </div>
