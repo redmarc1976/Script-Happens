@@ -217,12 +217,12 @@ function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSim
             <h1 className="landing-hero-title">Hi {firstName}.<br />Your workspace, ready when you are.</h1>
             <p className="landing-hero-subtitle">Find your space in seconds below.</p>
             <div className="landing-hero-actions">
-              <button className="landing-btn landing-btn-primary" onClick={onOpenFloorPlan}>Book now</button>
-              <button className="landing-btn landing-btn-secondary" onClick={() => setCheckedIn(true)}>Check in</button>
+              <button id="tour-book-now" className="landing-btn landing-btn-primary" onClick={onOpenFloorPlan}>Book now</button>
+              <button id="tour-check-in" className="landing-btn landing-btn-secondary" onClick={() => setCheckedIn(true)}>Check in</button>
             </div>
           </div>
           <div className="landing-hero-panels">
-            <aside className="landing-upcoming" aria-label="Upcoming desk bookings">
+            <aside id="tour-upcoming" className="landing-upcoming" aria-label="Upcoming desk bookings">
               <h2 className="landing-upcoming-title">Upcoming bookings.</h2>
               <ul className="landing-upcoming-list">
                 {upcomingBookings.length === 0 && (
@@ -254,7 +254,7 @@ function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSim
               </ul>
             </aside>
 
-            <aside className="landing-suggested" aria-label="Suggested desk booking">
+            <aside id="tour-suggested" className="landing-suggested" aria-label="Suggested desk booking">
               <h2 className="landing-upcoming-title">Suggested booking.</h2>
               <div className="landing-upcoming-item landing-suggested-desk-row">
                 <div className="landing-upcoming-date">
@@ -282,17 +282,17 @@ function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSim
       </section>
 
       <section className="landing-quicklinks">
-        <button className="landing-quicklink" onClick={onOpenFloorPlan}>
+        <button id="tour-floorplan" className="landing-quicklink" onClick={onOpenFloorPlan}>
           <MapIcon />
           <h3 className="landing-quicklink-title">Floor Plan</h3>
           <p className="landing-quicklink-text">See the layout of the site and who's sat where.</p>
         </button>
-        <button className="landing-quicklink" onClick={onOpenSearch}>
+        <button id="tour-team" className="landing-quicklink" onClick={onOpenSearch}>
           <PeopleIcon />
           <h3 className="landing-quicklink-title">Team Bookings</h3>
           <p className="landing-quicklink-text">Book for your team, or for your forgetful colleague.</p>
         </button>
-        <button className="landing-quicklink" onClick={onOpenSimpleSearch}>
+        <button id="tour-search" className="landing-quicklink" onClick={onOpenSimpleSearch}>
           <SearchIcon />
           <h3 className="landing-quicklink-title">Search</h3>
           <p className="landing-quicklink-text">Looking for a colleague? Look no further.</p>

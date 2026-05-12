@@ -7,12 +7,19 @@ import ChatPanel from './components/ChatPanel'
 import Landing from './components/Landing'
 import Search from './components/Search'
 import Profile from './components/Profile'
+import Tour from './components/Tour'
 import { useMemo, useState } from 'react'
 import { USERS } from './data/users'
 import { getBookingForUser } from './data/bookings'
 import { getDeskById } from './data/desks'
 
 const CURRENT_USER_ID = '00000000-0000-0000-0000-000000000001'
+const GOOD_HABITS = [
+  "When you're not in, release your desk so others can book it.",
+  'Always check in when you arrive at the office.',
+  "Don't overbook — only reserve desks for days you're planning to be in.",
+  'Keep your profile and Outlook days up to date so your team knows when to expect you.',
+]
 
 type View = 'landing' | 'floorplan' | 'search' | 'simplesearch' | 'profile'
 
@@ -27,6 +34,8 @@ function App() {
   const [assignments, setAssignments] = useState<Map<string, string>>(new Map())
   const [bookingConfirmed, setBookingConfirmed] = useState(false)
   const [bookingConflict, setBookingConflict] = useState<{ userName: string; deskName: string; floor: string } | null>(null)
+  const [showHabits, setShowHabits] = useState(false)
+  const [showTour, setShowTour] = useState(true)
 
   const selectedColleagues = useMemo(() => {
     return USERS
@@ -105,9 +114,13 @@ function App() {
     setActiveColleagueId(nextActive)
   }
 
+  const showHabitsIfFirst = () => {
+    setShowHabits(true)
+  }
+
   const openFloorPlan = () => {
     setCurrentView('floorplan')
-    // Auto-select the first unassigned colleague so the user can start clicking desks
+    showHabitsIfFirst()
     if (!activeColleagueId) {
       const first = selectedColleagues.find(u => !assignments.has(u.id))
       if (first) setActiveColleagueId(first.id)
@@ -119,6 +132,7 @@ function App() {
     setAssignments(new Map())
     setActiveColleagueId(CURRENT_USER_ID)
     setCurrentView('floorplan')
+    showHabitsIfFirst()
   }
 
   const openSelfBookingWithDesk = (deskId: string) => {
@@ -128,6 +142,11 @@ function App() {
     setActiveColleagueId(CURRENT_USER_ID)
     if (desk) setSelectedFloor(desk.floor)
     setCurrentView('floorplan')
+    showHabitsIfFirst()
+  }
+
+  const dismissHabits = () => {
+    setShowHabits(false)
   }
 
   return (
@@ -182,6 +201,9 @@ function App() {
         </>
       )}
       {chatOpen && <ChatPanel />}
+      {currentView === 'landing' && showTour && (
+        <Tour onDismiss={() => setShowTour(false)} />
+      )}
 
       {bookingConflict && (
         <div className="booking-confirm-backdrop" role="presentation">
@@ -216,6 +238,49 @@ function App() {
         </div>
       )}
 
+
+      {showHabits && (
+        <div className="booking-confirm-backdrop" role="presentation">
+          <div
+            className="booking-confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="habits-title"
+          >
+            <div className="booking-confirm-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="36" height="36">
+                <circle cx="12" cy="12" r="11" fill="#024731" />
+                <path d="M12 6a4 4 0 0 1 2 7.46V15a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-1.54A4 4 0 0 1 12 6z" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M10 18h4" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M10 20h4" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <h2 id="habits-title" className="booking-confirm-title">Good booking habits</h2>
+            <ul className="habits-list">
+              {GOOD_HABITS.map((tip, i) => (
+                <li key={i} className="habits-item">{tip}</li>
+              ))}
+            </ul>
+            <div className="habits-actions">
+              <button
+                type="button"
+                className="booking-confirm-btn"
+                onClick={dismissHabits}
+                autoFocus
+              >
+                Got it
+              </button>
+              <button
+                type="button"
+                className="booking-confirm-btn"
+                onClick={() => { dismissHabits(); setCurrentView('profile') }}
+              >
+                Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {bookingConfirmed && (
         <div className="booking-confirm-backdrop" role="presentation">

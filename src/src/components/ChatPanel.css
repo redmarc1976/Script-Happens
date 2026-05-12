@@ -79,3 +79,39 @@
 .chat-send-btn:hover {
   background: var(--color-secondary);
 }
+
+@media (prefers-color-scheme: dark) {
+  .chat-panel {
+    border-left-color: #3a3a3a;
+  }
+
+  .chat-header {
+    background: #2d2d2d;
+    color: #f3f4f6;
+    border-bottom-color: #3a3a3a;
+  }
+
+  .chat-messages {
+    background: #242424;
+  }
+
+  .chat-bubble.assistant {
+    background: #2d2d2d;
+    color: #f3f4f6;
+  }
+
+  .chat-input-row {
+    background: #2d2d2d;
+    border-top-color: #3a3a3a;
+  }
+
+  .chat-input {
+    background: #1e1e1e;
+    color: #f3f4f6;
+    border-color: #3a3a3a;
+  }
+
+  .chat-input::placeholder {
+    color: #9ca3af;
+  }
+}

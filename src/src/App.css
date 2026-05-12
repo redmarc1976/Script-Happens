@@ -125,3 +125,39 @@
   opacity: 0.9;
 }
 
+.habits-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+
+.habits-list {
+  list-style: none;
+  margin: 0 0 20px 0;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.habits-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: #444;
+  line-height: 1.5;
+}
+
+.habits-item::before {
+  content: '';
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+}
+

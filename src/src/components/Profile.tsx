@@ -88,6 +88,15 @@ function numDiffLabel(theirs: number, mine: number, suffix = ''): string {
   return `${sign}${Math.abs(diff)}${suffix} vs you`
 }
 
+const ACCESSIBILITY_OPTIONS = [
+  'EHAD desk',
+  'Near entrance',
+  'Ground floor',
+  'Near accessible bathroom',
+  'Near lift',
+  'Wide aisle access',
+]
+
 const INITIAL_PROFILE = {
   fullName: 'Daniel Judge',
   role: 'Senior Engineer',
@@ -97,11 +106,12 @@ const INITIAL_PROFILE = {
   lineManager: 'Sam Carter',
   preferredNeighbourhood: 'Security',
   officeDays: ['Monday', 'Tuesday', 'Thursday'] as string[],
+  accessibilityNeeds: [] as string[],
 }
 
 type ProfileData = typeof INITIAL_PROFILE
 
-const TEXT_ROWS: { key: Exclude<keyof ProfileData, 'officeDays'>; label: string; editable: boolean }[] = [
+const TEXT_ROWS: { key: Exclude<keyof ProfileData, 'officeDays' | 'accessibilityNeeds'>; label: string; editable: boolean }[] = [
   { key: 'fullName', label: 'Name', editable: false },
   { key: 'role', label: 'Role', editable: false },
   { key: 'team', label: 'Team', editable: false },
@@ -158,6 +168,15 @@ function Profile() {
       officeDays: prev.officeDays.includes(day)
         ? prev.officeDays.filter(d => d !== day)
         : [...prev.officeDays, day],
+    }))
+  }
+
+  function toggleAccessibility(option: string) {
+    setDraft(prev => ({
+      ...prev,
+      accessibilityNeeds: prev.accessibilityNeeds.includes(option)
+        ? prev.accessibilityNeeds.filter(o => o !== option)
+        : [...prev.accessibilityNeeds, option],
     }))
   }
 
@@ -218,6 +237,28 @@ function Profile() {
               </div>
             ) : (
               <span className="profile-value">{officeDaysSorted(profile.officeDays) || 'None'}</span>
+            )}
+          </div>
+
+          <div className="profile-row">
+            <span className="profile-label">Accessibility preferences</span>
+            {isEditing ? (
+              <div className="profile-checkbox-group">
+                {ACCESSIBILITY_OPTIONS.map(option => (
+                  <label key={option} className="profile-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={draft.accessibilityNeeds.includes(option)}
+                      onChange={() => toggleAccessibility(option)}
+                    />
+                    <span>{option}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <span className="profile-value">
+                {profile.accessibilityNeeds.length > 0 ? profile.accessibilityNeeds.join(', ') : 'None'}
+              </span>
             )}
           </div>
 
@@ -319,6 +360,7 @@ function Profile() {
         </div>
       </section>
       </div>
+
     </div>
   )
 }
