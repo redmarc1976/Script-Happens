@@ -167,3 +167,29 @@
   background: #15803d;
   border-color: #15803d;
 }
+
+.sidebar-waitlist-row {
+  padding: 8px 16px 4px;
+}
+
+.sidebar-waitlist-btn {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--color-secondary);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.sidebar-waitlist-btn:hover {
+  color: var(--color-primary);
+}
+
+.sidebar-waitlist-btn.joined {
+  color: #16a34a;
+  font-weight: 600;
+  text-decoration: none;
+}

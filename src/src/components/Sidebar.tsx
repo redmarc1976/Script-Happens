@@ -48,6 +48,21 @@ function Sidebar({
   const [selectedSite, setSelectedSite] = useState('leeds')
   const [siteMenuOpen, setSiteMenuOpen] = useState(false)
   const siteRef = useRef<HTMLDivElement>(null)
+  const [waitlistJoined, setWaitlistJoined] = useState(false)
+  const [showWaitlistPopup, setShowWaitlistPopup] = useState(false)
+
+  const MOCK_QUEUE_START = 5
+
+  function joinWaitlist() {
+    setWaitlistJoined(true)
+    setShowWaitlistPopup(true)
+  }
+
+  const dayName = selectedDate.toLocaleDateString(undefined, { weekday: 'long' })
+  const floorLabel = selectedFloor.charAt(0).toUpperCase() + selectedFloor.slice(1)
+  const groupSize = selectedColleagues.length
+  const queueEnd = MOCK_QUEUE_START + Math.max(groupSize - 1, 0)
+  const isGroup = groupSize > 1
 
   useEffect(() => {
     if (!siteMenuOpen) return
@@ -139,7 +154,58 @@ function Sidebar({
           )}
         </div>
       )}
+      <div className="sidebar-waitlist-row">
+        <button
+          type="button"
+          className={`sidebar-waitlist-btn${waitlistJoined ? ' joined' : ''}`}
+          onClick={() => waitlistJoined ? setWaitlistJoined(false) : joinWaitlist()}
+        >
+          {waitlistJoined ? '✓ On waitlist' : '+ Join waitlist'}
+        </button>
+      </div>
       <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
+
+      {showWaitlistPopup && (
+        <div className="booking-confirm-backdrop" role="presentation">
+          <div
+            className="booking-confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="waitlist-title"
+          >
+            <div className="booking-confirm-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="36" height="36">
+                <circle cx="12" cy="12" r="11" fill="#006a4d" />
+                <path d="M12 7v5l3 2" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              </svg>
+            </div>
+            <h2 id="waitlist-title" className="booking-confirm-title">
+              {isGroup ? 'Your group is on the waitlist' : 'You\'re on the waitlist'}
+            </h2>
+            <p className="booking-confirm-text">
+              {isGroup ? (
+                <>
+                  Your group of <strong>{groupSize}</strong> are positions <strong>{MOCK_QUEUE_START}–{queueEnd}</strong> in the queue for <strong>{dayName}</strong> on the <strong>{floorLabel} Floor</strong>.<br /><br />
+                  Desks will be automatically assigned in order as they become available. If anyone in the group books a desk independently, they'll be removed from the waitlist.
+                </>
+              ) : (
+                <>
+                  You're <strong>#{MOCK_QUEUE_START}</strong> in the queue for <strong>{dayName}</strong> on the <strong>{floorLabel} Floor</strong>.<br /><br />
+                  You'll automatically be assigned a desk once one becomes available. If you book a desk yourself, you'll be removed from the waitlist.
+                </>
+              )}
+            </p>
+            <button
+              type="button"
+              className="booking-confirm-btn"
+              onClick={() => setShowWaitlistPopup(false)}
+              autoFocus
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

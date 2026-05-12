@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import './Landing.css'
 import clock from '../assets/Clock.png'
 import { DESKS } from '../data/desks'
+import { USERS } from '../data/users'
 
 interface LandingProps {
   onOpenFloorPlan: () => void
@@ -140,6 +141,27 @@ function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSim
   const [firstName, setFirstName] = useState('Daniel')
   const [checkedIn, setCheckedIn] = useState(false)
   const [releaseTarget, setReleaseTarget] = useState<UpcomingBooking | null>(null)
+  const [handoverTarget, setHandoverTarget] = useState<UpcomingBooking | null>(null)
+  const [handoverQuery, setHandoverQuery] = useState('')
+  const [handoverColleague, setHandoverColleague] = useState<{ id: string; fullName: string } | null>(null)
+
+  const handoverResults = handoverQuery.trim()
+    ? USERS.filter(u => u.fullName.toLowerCase().includes(handoverQuery.trim().toLowerCase())).slice(0, 5)
+    : []
+
+  function confirmHandover() {
+    if (!handoverTarget || !handoverColleague) return
+    setUpcomingBookings(prev => prev.filter(b => b.dateKey !== handoverTarget.dateKey))
+    setHandoverTarget(null)
+    setHandoverQuery('')
+    setHandoverColleague(null)
+  }
+
+  function cancelHandover() {
+    setHandoverTarget(null)
+    setHandoverQuery('')
+    setHandoverColleague(null)
+  }
 
   const confirmRelease = () => {
     if (!releaseTarget) return
@@ -240,14 +262,24 @@ function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSim
                         <span className="landing-upcoming-desk">{b.desk}</span>
                         <span className="landing-upcoming-area">{b.area}</span>
                       </div>
-                      <button
-                        type="button"
-                        className="landing-upcoming-cancel"
-                        onClick={() => setReleaseTarget(b)}
-                        aria-label={`Release booking for ${b.desk} on ${fmt.weekday} ${fmt.date}`}
-                      >
-                        Release
-                      </button>
+                      <div className="landing-upcoming-actions">
+                        <button
+                          type="button"
+                          className="landing-upcoming-handover"
+                          onClick={() => setHandoverTarget(b)}
+                          aria-label={`Handover booking for ${b.desk} on ${fmt.weekday} ${fmt.date}`}
+                        >
+                          Handover
+                        </button>
+                        <button
+                          type="button"
+                          className="landing-upcoming-cancel"
+                          onClick={() => setReleaseTarget(b)}
+                          aria-label={`Release booking for ${b.desk} on ${fmt.weekday} ${fmt.date}`}
+                        >
+                          Release
+                        </button>
+                      </div>
                     </li>
                   )
                 })}
@@ -366,6 +398,70 @@ function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSim
             >
               Done
             </button>
+          </div>
+        </div>
+      )}
+
+      {handoverTarget && (
+        <div className="booking-confirm-backdrop" role="presentation">
+          <div
+            className="booking-confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="handover-title"
+            style={{ maxWidth: 460 }}
+          >
+            <div className="booking-confirm-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="36" height="36">
+                <circle cx="12" cy="12" r="11" fill="#006a4d" />
+                <path d="M8 12h8M13 8l4 4-4 4" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              </svg>
+            </div>
+            <h2 id="handover-title" className="booking-confirm-title">Handover desk</h2>
+            <p className="booking-confirm-text" style={{ marginBottom: 14 }}>
+              Search for a colleague to hand over <strong>{handoverTarget.desk}</strong> on <strong>{formatUpcoming(handoverTarget.date).weekday} {formatUpcoming(handoverTarget.date).date}</strong>.
+            </p>
+            <input
+              className="handover-search"
+              placeholder="Search colleagues..."
+              value={handoverQuery}
+              onChange={e => { setHandoverQuery(e.target.value); setHandoverColleague(null) }}
+              autoFocus
+            />
+            {handoverResults.length > 0 && !handoverColleague && (
+              <ul className="handover-results">
+                {handoverResults.map(u => (
+                  <li key={u.id}>
+                    <button
+                      className="handover-result-btn"
+                      onClick={() => { setHandoverColleague(u); setHandoverQuery('') }}
+                    >
+                      {u.fullName}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {handoverColleague && (
+              <p className="handover-selected-name">Handing over to: <strong>{handoverColleague.fullName}</strong></p>
+            )}
+            <div className="handover-actions">
+              <button
+                type="button"
+                className="booking-confirm-btn handover-confirm-btn"
+                onClick={confirmHandover}
+                disabled={!handoverColleague}
+              >
+                Handover
+              </button>
+              <button
+                type="button"
+                className="booking-confirm-btn landing-release-cancel-btn"
+                onClick={cancelHandover}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -8,6 +8,7 @@ import Landing from './components/Landing'
 import Search from './components/Search'
 import Profile from './components/Profile'
 import Tour from './components/Tour'
+import AlertBanner from './components/AlertBanner'
 import { useMemo, useState } from 'react'
 import { USERS } from './data/users'
 import { getBookingForUser } from './data/bookings'
@@ -157,6 +158,7 @@ function App() {
         onHome={() => setCurrentView('landing')}
         onProfile={() => setCurrentView('profile')}
       />
+      <AlertBanner />
       {currentView === 'landing' ? (
         <Landing
           onOpenFloorPlan={openSelfBooking}
