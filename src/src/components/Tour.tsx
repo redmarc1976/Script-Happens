@@ -21,7 +21,7 @@ const STEPS: TourStep[] = [
   {
     selector: '#tour-upcoming',
     title: 'Upcoming bookings',
-    description: 'Your upcoming desk bookings appear here. Release them if your plans change.',
+    description: 'Your upcoming desk bookings appear here. Use Release to free a desk if your plans change, or Handover to transfer it directly to a colleague.',
   },
   {
     selector: '#tour-suggested',

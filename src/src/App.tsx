@@ -166,6 +166,7 @@ function App() {
           onOpenSearch={() => setCurrentView('search')}
           onOpenSimpleSearch={() => setCurrentView('simplesearch')}
           onOpenProfile={() => setCurrentView('profile')}
+          onStartTour={() => setShowTour(true)}
         />
       ) : currentView === 'search' ? (
         <Search

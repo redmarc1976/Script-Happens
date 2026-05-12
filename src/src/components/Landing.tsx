@@ -10,6 +10,7 @@ interface LandingProps {
   onOpenSearch: () => void
   onOpenSimpleSearch: () => void
   onOpenProfile: () => void
+  onStartTour: () => void
 }
 
 const iconStroke = {
@@ -136,7 +137,7 @@ function formatUpcoming(d: Date): { weekday: string; date: string } {
   }
 }
 
-function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSimpleSearch, onOpenProfile }: LandingProps) {
+function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSimpleSearch, onOpenProfile, onStartTour }: LandingProps) {
   const [upcomingBookings, setUpcomingBookings] = useState<UpcomingBooking[]>(buildUpcomingBookings)
   const [firstName, setFirstName] = useState('Daniel')
   const [checkedIn, setCheckedIn] = useState(false)
@@ -240,7 +241,14 @@ function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSim
             <p className="landing-hero-subtitle">Find your space in seconds below.</p>
             <div className="landing-hero-actions">
               <button id="tour-book-now" className="landing-btn landing-btn-primary" onClick={onOpenFloorPlan}>Book now</button>
-              <button id="tour-check-in" className="landing-btn landing-btn-secondary" onClick={() => setCheckedIn(true)}>Check in</button>
+              <button
+                id="tour-check-in"
+                className={`landing-btn ${checkedIn ? 'landing-btn-checked-in' : 'landing-btn-secondary'}`}
+                onClick={() => setCheckedIn(prev => !prev)}
+              >
+                {checkedIn ? 'Release' : 'Check in'}
+              </button>
+              <button className="landing-tour-trigger" onClick={onStartTour}>View Tour</button>
             </div>
           </div>
           <div className="landing-hero-panels">
@@ -362,45 +370,6 @@ function Landing({ onOpenFloorPlan, onBookSuggestedDesk, onOpenSearch, onOpenSim
           <button className="landing-btn landing-btn-primary" onClick={onOpenProfile}>Profile</button>
         </div>
       </section>
-
-      {checkedIn && (
-        <div className="booking-confirm-backdrop" role="presentation">
-          <div
-            className="booking-confirm"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="checkin-confirm-title"
-          >
-            <div className="booking-confirm-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="36" height="36">
-                <circle cx="12" cy="12" r="11" fill="#16a34a" />
-                <path
-                  d="M7 12.5l3.5 3.5L17 8.5"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <h2 id="checkin-confirm-title" className="booking-confirm-title">
-              You're checked in!
-            </h2>
-            <p className="booking-confirm-text">
-              Welcome in, {firstName}. Your check-in has been recorded for today.
-            </p>
-            <button
-              type="button"
-              className="booking-confirm-btn"
-              onClick={() => setCheckedIn(false)}
-              autoFocus
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
 
       {handoverTarget && (
         <div className="booking-confirm-backdrop" role="presentation">
