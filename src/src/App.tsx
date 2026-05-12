@@ -161,6 +161,7 @@ function App() {
           />
           <MainPanel
             selectedFloor={selectedFloor}
+            selectedDate={selectedDate}
             activeColleagueId={activeColleagueId}
             activeColleagueName={selectedColleagues.find(u => u.id === activeColleagueId)?.fullName ?? null}
             assignments={assignments}

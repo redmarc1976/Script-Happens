@@ -4,10 +4,12 @@ import firstImg from '../assets/floorplans/first.png'
 import { getDesksByFloor } from '../data/desks'
 import type { Desk, Floor } from '../data/desks'
 import { useDesks } from '../hooks/useDesks'
+import { MOCK_BOOKINGS, dateKey } from '../data/bookings'
 import './MainPanel.css'
 
 interface MainPanelProps {
   selectedFloor: string
+  selectedDate: Date
   activeColleagueId: string | null
   activeColleagueName: string | null
   assignments: Map<string, string>
@@ -21,6 +23,7 @@ const FLOOR_IMAGES: Record<string, string> = {
 
 function MainPanel({
   selectedFloor,
+  selectedDate,
   activeColleagueId,
   activeColleagueName,
   assignments,
@@ -32,6 +35,11 @@ function MainPanel({
     ? apiDesks.filter(d => d.floor === selectedFloor)
     : getDesksByFloor(selectedFloor as Floor)
   const [hoveredDesk, setHoveredDesk] = useState<Desk | null>(null)
+
+  const bookedDeskIds = useMemo(() => {
+    const key = dateKey(selectedDate)
+    return new Set(MOCK_BOOKINGS.filter(b => b.date === key).map(b => b.deskId))
+  }, [selectedDate])
 
   const deskToColleague = useMemo(() => {
     const m = new Map<string, string>()
@@ -59,8 +67,10 @@ function MainPanel({
           />
           {desks.map(desk => {
             const assignedTo = deskToColleague.get(desk.id)
+            const isBooked = bookedDeskIds.has(desk.id)
             const classes = ['desk-dot']
             if (assignedTo) classes.push('desk-dot-assigned')
+            else if (isBooked) classes.push('desk-dot-booked')
             if (activeColleagueId && assignedTo === activeColleagueId) classes.push('desk-dot-active')
             return (
               <div
@@ -70,10 +80,10 @@ function MainPanel({
                 onMouseEnter={() => setHoveredDesk(desk)}
                 onMouseLeave={() => setHoveredDesk(null)}
                 onClick={() => {
-                  if (activeColleagueId) onAssignDesk(desk.id)
+                  if (activeColleagueId && !isBooked) onAssignDesk(desk.id)
                 }}
-                role={activeColleagueId ? 'button' : undefined}
-                aria-label={activeColleagueId ? `Assign ${desk.name} to ${activeColleagueName}` : undefined}
+                role={activeColleagueId && !isBooked ? 'button' : undefined}
+                aria-label={activeColleagueId && !isBooked ? `Assign ${desk.name} to ${activeColleagueName}` : undefined}
               />
             )
           })}
@@ -96,12 +106,25 @@ function MainPanel({
               </div>
               {deskToColleague.has(hoveredDesk.id) && (
                 <div className="desk-tooltip-row">
-                  <span className="desk-tooltip-label">Assigned</span>
-                  <span>booked</span>
+                  <span className="desk-tooltip-label">Status</span>
+                  <span>Assigned</span>
+                </div>
+              )}
+              {!deskToColleague.has(hoveredDesk.id) && bookedDeskIds.has(hoveredDesk.id) && (
+                <div className="desk-tooltip-row">
+                  <span className="desk-tooltip-label">Status</span>
+                  <span>Booked</span>
                 </div>
               )}
             </div>
           )}
+        </div>
+      )}
+      {image && (
+        <div className="floor-plan-legend">
+          <span className="legend-item"><span className="legend-dot legend-dot-available" />Available</span>
+          <span className="legend-item"><span className="legend-dot legend-dot-booked" />Booked</span>
+          <span className="legend-item"><span className="legend-dot legend-dot-assigned" />Assigned</span>
         </div>
       )}
     </div>
