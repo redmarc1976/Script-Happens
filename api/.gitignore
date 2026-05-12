@@ -17,7 +17,8 @@ project.lock.json
 /tools/NuGet.exe
 /App_Data
 /secrets
-/data
+/data/*
+!/data/fake_calendars.json
 .secrets
 appsettings.json
 local.settings.json

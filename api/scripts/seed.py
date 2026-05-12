@@ -278,34 +278,129 @@ def seed_bookings(session, user_objects, desk_objects):
 
 
 def seed_holidays(session, user_objects):
-    """Synthetic holidays: ~20% of users get 1-2 future holiday windows."""
+    """Synthetic holidays.
+
+    ~20% of users get 1-2 future holiday windows somewhere in the next 7-90
+    days. On top of that ~15% of users get a near-term (1-14 day) holiday so
+    the agent has obvious cases to skip during a live demo.
+    """
     print("Seeding holidays...")
     today = date.today()
     holiday_types = ["vacation", "sick", "personal"]
     type_weights = [6, 2, 1]
     holiday_count = 0
-    eligible_users = random.sample(list(user_objects.values()), k=len(user_objects) // 5)
 
-    for user in eligible_users:
+    def add_holiday(user, start_offset, length):
+        start = today + timedelta(days=start_offset)
+        end = start + timedelta(days=length - 1)
+        session.add(Holiday(
+            id=str(uuid.uuid4()),
+            user_id=user.id,
+            start_date=start.isoformat(),
+            end_date=end.isoformat(),
+            holiday_type=random.choices(holiday_types, weights=type_weights)[0],
+            approved=1,
+            created_at=datetime.utcnow(),
+        ))
+
+    # Far-out window: 7-90 days
+    far_users = random.sample(list(user_objects.values()), k=len(user_objects) // 5)
+    for user in far_users:
         for _ in range(random.randint(1, 2)):
-            start_offset = random.randint(7, 90)
             length = random.choices([1, 2, 3, 5, 10], weights=[2, 2, 3, 2, 1])[0]
-            start = today + timedelta(days=start_offset)
-            end = start + timedelta(days=length - 1)
-            holiday = Holiday(
-                id=str(uuid.uuid4()),
-                user_id=user.id,
-                start_date=start.isoformat(),
-                end_date=end.isoformat(),
-                holiday_type=random.choices(holiday_types, weights=type_weights)[0],
-                approved=1,
-                created_at=datetime.utcnow(),
-            )
-            session.add(holiday)
+            add_holiday(user, random.randint(7, 90), length)
             holiday_count += 1
+
+    # Near-term window: 1-14 days, so the demo has visible holidays to skip
+    near_users = random.sample(
+        list(user_objects.values()),
+        k=max(1, len(user_objects) * 15 // 100),
+    )
+    for user in near_users:
+        length = random.choices([1, 2, 3, 5], weights=[3, 3, 2, 1])[0]
+        add_holiday(user, random.randint(1, 14), length)
+        holiday_count += 1
 
     session.commit()
     print(f"  Created {holiday_count} holidays")
+
+
+def seed_fake_calendars(user_objects):
+    """Write api/data/fake_calendars.json — per-user, per-day work location.
+
+    Reads users.json for each user's `defaultWorkingPattern` and
+    `anchorDays`, then projects them forward ~90 days with light variance:
+      - anchor days are always "office"
+      - 85% of remaining weekdays follow the working pattern
+      - 10% are swapped (office<->remote, e.g. last-minute change)
+      - 5% are "unknown" (empty calendar)
+      - weekends are always "unknown"
+
+    Each user is keyed by both UPN and email so a caller can look up by
+    whichever identifier they have.
+    """
+    print("Seeding fake calendars...")
+    out_path = Path(__file__).parent.parent / "data" / "fake_calendars.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(USERS_JSON) as f:
+        users_data = json.load(f)
+    users_by_id = {u["id"]: u for u in users_data}
+
+    today = date.today()
+    horizon_days = 90
+    users_out: dict[str, list[dict]] = {}
+
+    for uid, user in user_objects.items():
+        raw = users_by_id.get(uid, {})
+        pattern = (raw.get("defaultWorkingPattern") or {})
+        anchor_days = {d.lower() for d in (raw.get("anchorDays") or [])}
+        days = []
+        for offset in range(horizon_days):
+            d = today + timedelta(days=offset)
+            weekday = d.strftime("%A").lower()
+            if d.weekday() >= 5:  # Saturday/Sunday
+                days.append({"date": d.isoformat(), "location": "unknown", "source": None})
+                continue
+            if weekday in anchor_days:
+                days.append({"date": d.isoformat(), "location": "office", "source": "anchor day"})
+                continue
+            default = pattern.get(weekday)  # "office" | "remote" | None
+            if not default:
+                days.append({"date": d.isoformat(), "location": "unknown", "source": None})
+                continue
+            roll = random.random()
+            if roll < 0.85:
+                days.append({
+                    "date": d.isoformat(),
+                    "location": default,
+                    "source": "working pattern",
+                })
+            elif roll < 0.95:
+                swapped = "remote" if default == "office" else "office"
+                days.append({
+                    "date": d.isoformat(),
+                    "location": swapped,
+                    "source": "swapped from pattern",
+                })
+            else:
+                days.append({"date": d.isoformat(), "location": "unknown", "source": None})
+
+        # Key by every identifier the API might pass in
+        keys = {user.upn, user.email}
+        keys = {k for k in keys if k}
+        for k in keys:
+            users_out[k] = days
+            users_out[k.lower()] = days
+
+    payload = {
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "horizon_days": horizon_days,
+        "users": users_out,
+    }
+    with out_path.open("w") as f:
+        json.dump(payload, f, indent=2)
+    print(f"  Wrote {out_path} ({len(user_objects)} users, {horizon_days} days)")
 
 
 def main():
@@ -336,6 +431,7 @@ def main():
         seed_working_patterns(session, user_objects)
         seed_bookings(session, user_objects, desk_objects)
         seed_holidays(session, user_objects)
+        seed_fake_calendars(user_objects)
         print("\nSeed complete!")
     except Exception:
         session.rollback()

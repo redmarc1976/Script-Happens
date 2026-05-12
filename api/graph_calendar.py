@@ -259,10 +259,18 @@ async def work_location_by_day(
 ) -> list[dict[str, Any]]:
     """High-level: return per-day work location verdicts for a user.
 
-    Performs a User.Read.All pre-check so callers get a clean
+    When USE_FAKE_CALENDAR=1, returns synthetic data from
+    `mock_work_location` instead of hitting Microsoft Graph. Useful for
+    demos and local development without an Entra tenant.
+
+    Otherwise performs a User.Read.All pre-check so callers get a clean
     UserNotFoundError / MailboxNotProvisionedError instead of a generic
     Graph 404 from /calendarView.
     """
+    if os.getenv("USE_FAKE_CALENDAR") == "1":
+        from mock_work_location import mock_work_location_by_day
+        return mock_work_location_by_day(user_id, start_date, end_date)
+
     await check_user_mailbox(user_id)
     start_dt = datetime.combine(start_date, datetime.min.time(), tzinfo=timezone.utc)
     end_dt = datetime.combine(
