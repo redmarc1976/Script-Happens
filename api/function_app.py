@@ -62,6 +62,10 @@ class MeResponse(BaseModel):
     role: str
     location: str
     preferred_neighbourhood: Optional[str]
+    line_manager_name: Optional[str]
+    line_manager_email: Optional[str]
+    anchor_days: Optional[List[str]] = None
+    default_working_pattern: Optional[dict] = None
     identity_provider: str
     is_manager: bool
     reports: List[str]
@@ -136,6 +140,10 @@ def get_me(
         role=user.role,
         location=user.location,
         preferred_neighbourhood=user.preferred_neighbourhood,
+        line_manager_name=user.line_manager_name,
+        line_manager_email=user.line_manager_email,
+        anchor_days=user.anchor_days,
+        default_working_pattern=user.default_working_pattern,
         identity_provider=principal.identity_provider,
         is_manager=len(reports) > 0,
         reports=[r.upn or r.email for r in reports],

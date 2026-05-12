@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import './Profile.css'
+import { useCurrentUser, type CurrentUser } from '../hooks/useCurrentUser'
 
 const iconStroke = {
   fill: 'none',
@@ -89,17 +90,34 @@ function numDiffLabel(theirs: number, mine: number, suffix = ''): string {
 }
 
 const INITIAL_PROFILE = {
-  fullName: 'Daniel Judge',
-  role: 'Senior Engineer',
-  team: 'Security',
-  email: 'daniel.judge@example.com',
-  location: 'Leeds',
-  lineManager: 'Sam Carter',
-  preferredNeighbourhood: 'Security',
-  officeDays: ['Monday', 'Tuesday', 'Thursday'] as string[],
+  fullName: '',
+  role: '',
+  team: '',
+  email: '',
+  location: '',
+  lineManager: '',
+  preferredNeighbourhood: '',
+  officeDays: [] as string[],
 }
 
 type ProfileData = typeof INITIAL_PROFILE
+
+function profileFromUser(user: CurrentUser): ProfileData {
+  const pattern = user.default_working_pattern ?? {}
+  const officeDays = Object.entries(pattern)
+    .filter(([, status]) => status === 'office')
+    .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1))
+  return {
+    fullName: user.full_name,
+    role: user.role,
+    team: user.team,
+    email: user.email,
+    location: user.location,
+    lineManager: user.line_manager_name ?? '',
+    preferredNeighbourhood: user.preferred_neighbourhood ?? '',
+    officeDays,
+  }
+}
 
 const TEXT_ROWS: { key: Exclude<keyof ProfileData, 'officeDays'>; label: string; editable: boolean }[] = [
   { key: 'fullName', label: 'Name', editable: false },
@@ -112,8 +130,15 @@ const TEXT_ROWS: { key: Exclude<keyof ProfileData, 'officeDays'>; label: string;
 ]
 
 function Profile() {
-  const [profile, setProfile] = useState<ProfileData>(INITIAL_PROFILE)
-  const [draft, setDraft] = useState<ProfileData>(INITIAL_PROFILE)
+  const { user, loading, error } = useCurrentUser()
+  const baseProfile = useMemo<ProfileData>(
+    () => (user ? profileFromUser(user) : INITIAL_PROFILE),
+    [user],
+  )
+  // Local edits applied on top of the base server data. Cleared on save.
+  const [overrides, setOverrides] = useState<Partial<ProfileData>>({})
+  const profile: ProfileData = { ...baseProfile, ...overrides }
+  const [draft, setDraft] = useState<ProfileData>(profile)
   const [isEditing, setIsEditing] = useState(false)
   const [compareQuery, setCompareQuery] = useState('')
   const [selectedColleague, setSelectedColleague] = useState<Colleague | null>(null)
@@ -140,7 +165,7 @@ function Profile() {
   }
 
   function done() {
-    setProfile(draft)
+    setOverrides(draft)
     setIsEditing(false)
   }
 
@@ -169,7 +194,13 @@ function Profile() {
       <section className="profile-hero">
         <div className="profile-hero-content">
           <h1 className="profile-hero-title">My Profile.</h1>
-          <p className="profile-hero-subtitle">Your account, preferences, and bookings.</p>
+          <p className="profile-hero-subtitle">
+            {loading
+              ? 'Loading your profile…'
+              : error
+                ? `Could not load profile (${error}). Showing local edits only.`
+                : 'Your account, preferences, and bookings.'}
+          </p>
           {!isEditing && (
             <div className="profile-hero-actions">
               <button className="profile-btn profile-btn-primary" onClick={startEdit}>Edit details</button>
