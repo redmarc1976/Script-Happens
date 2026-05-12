@@ -6,7 +6,24 @@ interface SearchProps {
   onOpenFloorPlan?: () => void
   groupBookingIds?: Set<string>
   onToggleGroupBooking?: (userId: string) => void
+  onSetGroupBooking?: (ids: Set<string>) => void
   simpleMode?: boolean
+}
+
+interface SavedList {
+  id: string
+  name: string
+  userIds: string[]
+}
+
+const SAVED_LISTS_KEY = 'booking-saved-lists'
+
+function loadSavedLists(): SavedList[] {
+  try { return JSON.parse(localStorage.getItem(SAVED_LISTS_KEY) ?? '[]') } catch { return [] }
+}
+
+function persistSavedLists(lists: SavedList[]) {
+  localStorage.setItem(SAVED_LISTS_KEY, JSON.stringify(lists))
 }
 
 type BookingDialog =
@@ -79,10 +96,37 @@ function statusLabel(s: ForecastStatus): string {
   return 'Weekend'
 }
 
-function Search({ onOpenFloorPlan, groupBookingIds = new Set(), onToggleGroupBooking = () => {}, simpleMode = false }: SearchProps) {
+function Search({ onOpenFloorPlan, groupBookingIds = new Set(), onToggleGroupBooking = () => {}, onSetGroupBooking, simpleMode = false }: SearchProps) {
   const [query, setQuery] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [dialog, setDialog] = useState<BookingDialog>({ kind: 'closed' })
+  const [savedLists, setSavedLists] = useState<SavedList[]>(loadSavedLists)
+  const [savingName, setSavingName] = useState('')
+  const [showSaveInput, setShowSaveInput] = useState(false)
+
+  function saveCurrentGroup() {
+    if (!savingName.trim() || groupBookingIds.size === 0) return
+    const newList: SavedList = {
+      id: crypto.randomUUID(),
+      name: savingName.trim(),
+      userIds: [...groupBookingIds],
+    }
+    const updated = [...savedLists, newList]
+    setSavedLists(updated)
+    persistSavedLists(updated)
+    setSavingName('')
+    setShowSaveInput(false)
+  }
+
+  function deleteSavedList(id: string) {
+    const updated = savedLists.filter(l => l.id !== id)
+    setSavedLists(updated)
+    persistSavedLists(updated)
+  }
+
+  function bookSavedList(list: SavedList) {
+    onSetGroupBooking?.(new Set(list.userIds))
+  }
 
   useEffect(() => {
     if (dialog.kind === 'closed') return
@@ -207,7 +251,7 @@ function Search({ onOpenFloorPlan, groupBookingIds = new Set(), onToggleGroupBoo
         })}
       </section>
 
-        {!simpleMode && <aside className="search-aside">
+        {!simpleMode && <aside className="search-aside" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           <header className="search-aside-head">
             <h2 className="search-aside-title">Group Booking List</h2>
             <span className="search-aside-count">{selectedUsers.length}</span>
@@ -253,8 +297,74 @@ function Search({ onOpenFloorPlan, groupBookingIds = new Set(), onToggleGroupBoo
               >
                 Make a Group Booking
               </button>
+              {!showSaveInput && (
+                <button
+                  type="button"
+                  className="search-aside-save-trigger"
+                  onClick={() => setShowSaveInput(true)}
+                >
+                  + Save this group as a list
+                </button>
+              )}
+              {showSaveInput && (
+                <div className="search-aside-save-row">
+                  <input
+                    className="search-aside-save-input"
+                    placeholder="List name..."
+                    value={savingName}
+                    onChange={e => setSavingName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') saveCurrentGroup(); if (e.key === 'Escape') setShowSaveInput(false) }}
+                    autoFocus
+                  />
+                  <div className="search-aside-save-actions">
+                    <button className="search-aside-save-btn" onClick={saveCurrentGroup} disabled={!savingName.trim()}>Save</button>
+                    <button className="search-aside-save-cancel" onClick={() => { setShowSaveInput(false); setSavingName('') }}>Cancel</button>
+                  </div>
+                </div>
+              )}
             </>
           )}
+
+          <div className="search-saved-section">
+            <div className="search-saved-head">
+              <h3 className="search-saved-title">Saved Lists</h3>
+              {savedLists.length > 0 && <span className="search-aside-count">{savedLists.length}</span>}
+            </div>
+            {savedLists.length === 0 ? (
+              <p className="search-aside-empty">No saved lists yet. Build a group and save it for next time.</p>
+            ) : (
+              <ul className="search-saved-list">
+                {savedLists.map(list => {
+                  const memberCount = list.userIds.length
+                  return (
+                    <li key={list.id} className="search-saved-item">
+                      <div className="search-saved-info">
+                        <span className="search-saved-name">{list.name}</span>
+                        <span className="search-saved-count">{memberCount} {memberCount === 1 ? 'person' : 'people'}</span>
+                      </div>
+                      <div className="search-saved-actions">
+                        <button
+                          type="button"
+                          className="search-saved-book"
+                          onClick={() => bookSavedList(list)}
+                        >
+                          Book
+                        </button>
+                        <button
+                          type="button"
+                          className="search-aside-remove"
+                          onClick={() => deleteSavedList(list.id)}
+                          aria-label={`Delete ${list.name}`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
         </aside>}
       </div>
 

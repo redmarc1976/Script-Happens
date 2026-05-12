@@ -172,6 +172,12 @@ function App() {
           onOpenFloorPlan={openFloorPlan}
           groupBookingIds={groupBookingIds}
           onToggleGroupBooking={toggleGroupBooking}
+          onSetGroupBooking={(ids) => {
+            setGroupBookingIds(ids)
+            setAssignments(new Map())
+            setActiveColleagueId(null)
+            openFloorPlan()
+          }}
         />
       ) : currentView === 'simplesearch' ? (
         <Search simpleMode />
